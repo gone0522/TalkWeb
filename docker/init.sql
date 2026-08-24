@@ -57,17 +57,28 @@ CREATE TABLE IF NOT EXISTS chatapp.messages (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 訊息已讀狀態表
+-- 6. 訊息已讀狀態表 (message_read_status)
 CREATE TABLE IF NOT EXISTS chatapp.message_read_status (
     id BIGSERIAL PRIMARY KEY,
     message_id BIGINT NOT NULL REFERENCES chatapp.messages(id) ON DELETE CASCADE,
-    user_id BIGINT NOT NULL REFERENCES chatapp.users(id),
+    user_id BIGINT NOT NULL REFERENCES chatapp.users(id) ON DELETE CASCADE,
     read_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uk_message_user UNIQUE (message_id, user_id)
+    CONSTRAINT uk_msg_user UNIQUE (message_id, user_id)
 );
 
--- 索引優化
-CREATE INDEX IF NOT EXISTS idx_messages_sender ON chatapp.messages(sender_id);
+CREATE INDEX IF NOT EXISTS idx_read_status_msg ON chatapp.message_read_status(message_id, user_id);
+
+-- 7. 好友關聯表 (friendships)
+CREATE TABLE IF NOT EXISTS chatapp.friendships (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES chatapp.users(id) ON DELETE CASCADE,
+    friend_id BIGINT NOT NULL REFERENCES chatapp.users(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_user_friend UNIQUE (user_id, friend_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_friendships_user ON chatapp.friendships(user_id);
+CREATE INDEX IF NOT EXISTS idx_friendships_friend ON chatapp.friendships(friend_id);
 CREATE INDEX IF NOT EXISTS idx_messages_receiver ON chatapp.messages(receiver_id);
 CREATE INDEX IF NOT EXISTS idx_messages_group ON chatapp.messages(group_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created ON chatapp.messages(created_at);

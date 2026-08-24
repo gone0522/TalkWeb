@@ -37,7 +37,11 @@
         v-else-if="contactsStore.filteredContacts.length === 0"
         class="empty-contacts"
       >
-        查無符合的成員
+        <p v-if="contactsStore.searchQuery">查無符合的成員</p>
+        <div v-else class="empty-contacts-guide">
+          <p>尚無好友</p>
+          <span>請點擊上方「➕ 新增好友」透過帳號搜尋並加入同仁</span>
+        </div>
       </div>
 
       <div

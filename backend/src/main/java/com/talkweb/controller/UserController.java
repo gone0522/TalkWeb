@@ -77,4 +77,11 @@ public class UserController {
         UserDto user = userService.checkUserByUsername(username, principal.getId());
         return ApiResponse.success("找到使用者", user);
     }
+
+    @PostMapping("/contacts/add")
+    public ApiResponse<UserDto> addContact(@AuthenticationPrincipal UserPrincipal principal,
+                                           @Valid @RequestBody com.talkweb.dto.AddFriendRequest request) {
+        UserDto user = userService.addFriend(principal.getId(), request.getUsername());
+        return ApiResponse.success("成功新增好友", user);
+    }
 }

@@ -3,7 +3,9 @@ package com.talkweb.service;
 import com.talkweb.dto.CreateUserRequest;
 import com.talkweb.dto.UpdateProfileRequest;
 import com.talkweb.dto.UserDto;
+import com.talkweb.entity.Friendship;
 import com.talkweb.entity.User;
+import com.talkweb.repository.FriendshipRepository;
 import com.talkweb.repository.UserRepository;
 import com.talkweb.websocket.PresenceManager;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final FriendshipRepository friendshipRepository;
     private final PasswordEncoder passwordEncoder;
     private final PresenceManager presenceManager;
 
@@ -46,45 +49,96 @@ public class UserService {
         return mapToDto(user);
     }
 
+    /**
+     * 取得使用者的好友清單（僅回傳已建立好友關聯之用戶）
+     */
     @Transactional(readOnly = true)
     public List<UserDto> getAllActiveContacts(Long currentUserId) {
-        List<User> activeUsers = userRepository.findByStatusOrderByNicknameAsc("ACTIVE");
-        return activeUsers.stream()
-                .filter(u -> !u.getId().equals(currentUserId))
-                .map(this::mapToDto)
+        List<Friendship> friendships = friendshipRepository.findFriendsByUserId(currentUserId);
+        return friendships.stream()
+                .map(f -> {
+                    UserDto dto = mapToDto(f.getFriend());
+                    dto.setIsFriend(true);
+                    return dto;
+                })
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 在好友清單中進行關鍵字過濾搜尋
+     */
     @Transactional(readOnly = true)
     public List<UserDto> searchUsers(String keyword, Long currentUserId) {
-        List<User> matchedUsers = (keyword == null || keyword.trim().isEmpty())
-                ? userRepository.findByStatusOrderByNicknameAsc("ACTIVE")
-                : userRepository.searchActiveUsers(keyword.trim());
-
-        return matchedUsers.stream()
-                .filter(u -> !u.getId().equals(currentUserId))
-                .map(this::mapToDto)
+        List<UserDto> friends = getAllActiveContacts(currentUserId);
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return friends;
+        }
+        String cleanKw = keyword.trim().toLowerCase();
+        return friends.stream()
+                .filter(u -> (u.getNickname() != null && u.getNickname().toLowerCase().contains(cleanKw))
+                        || (u.getUsername() != null && u.getUsername().toLowerCase().contains(cleanKw)))
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 檢查目標帳號是否存在，並回傳是否已為好友
+     */
     @Transactional(readOnly = true)
     public UserDto checkUserByUsername(String username, Long currentUserId) {
         if (username == null || username.trim().isEmpty()) {
             throw new IllegalArgumentException("請輸入欲搜尋的帳號");
         }
         String cleanUsername = username.trim().toLowerCase();
-        User user = userRepository.findByUsername(cleanUsername)
+        User targetUser = userRepository.findByUsername(cleanUsername)
                 .orElseThrow(() -> new IllegalArgumentException("找不到帳號為「" + cleanUsername + "」的使用者，請確認帳號是否正確"));
 
-        if (user.getId().equals(currentUserId)) {
+        if (targetUser.getId().equals(currentUserId)) {
             throw new IllegalArgumentException("不能將自己新增為好友");
         }
 
-        if (!"ACTIVE".equalsIgnoreCase(user.getStatus())) {
+        if (!"ACTIVE".equalsIgnoreCase(targetUser.getStatus())) {
             throw new IllegalArgumentException("此帳號已被停用，無法新增為好友");
         }
 
-        return mapToDto(user);
+        boolean isFriend = friendshipRepository.existsByUserIdAndFriendId(currentUserId, targetUser.getId());
+
+        UserDto dto = mapToDto(targetUser);
+        dto.setIsFriend(isFriend);
+        return dto;
+    }
+
+    /**
+     * 新增好友（建立雙向好友關聯）
+     */
+    @Transactional
+    public UserDto addFriend(Long currentUserId, String targetUsername) {
+        UserDto checked = checkUserByUsername(targetUsername, currentUserId);
+        User currentUser = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new IllegalArgumentException("找不到當前使用者"));
+        User targetUser = userRepository.findById(checked.getId())
+                .orElseThrow(() -> new IllegalArgumentException("找不到目標使用者"));
+
+        // 建立雙向關聯 (A -> B 和 B -> A)
+        if (!friendshipRepository.existsByUserIdAndFriendId(currentUserId, targetUser.getId())) {
+            Friendship f1 = Friendship.builder()
+                    .user(currentUser)
+                    .friend(targetUser)
+                    .build();
+            friendshipRepository.save(f1);
+        }
+
+        if (!friendshipRepository.existsByUserIdAndFriendId(targetUser.getId(), currentUserId)) {
+            Friendship f2 = Friendship.builder()
+                    .user(targetUser)
+                    .friend(currentUser)
+                    .build();
+            friendshipRepository.save(f2);
+        }
+
+        log.info("成功建立好友關聯: {} <-> {}", currentUser.getUsername(), targetUser.getUsername());
+        UserDto result = mapToDto(targetUser);
+        result.setIsFriend(true);
+        return result;
     }
 
     // Admin Operations

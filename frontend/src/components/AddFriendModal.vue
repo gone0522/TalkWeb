@@ -2,13 +2,13 @@
   <div class="modal-backdrop" @click="$emit('close')">
     <div class="modal-content add-friend-dialog" @click.stop>
       <div class="modal-header">
-        <h3>新增好友 (檢查帳號)</h3>
+        <h3>新增好友 (搜尋帳號)</h3>
         <button class="modal-close" @click="$emit('close')">✕</button>
       </div>
 
       <div class="modal-body">
         <div class="search-account-form">
-          <label>請輸入欲新增的使用者帳號 (Username)：</label>
+          <label>請輸入欲新增之同仁帳號 (Username)：</label>
           <div class="input-with-btn">
             <input
               v-model="searchUsername"
@@ -22,7 +22,7 @@
               :disabled="checking || !searchUsername.trim()"
               @click="handleCheckUser"
             >
-              {{ checking ? '檢查中...' : '檢查帳號' }}
+              {{ checking ? '搜尋中...' : '搜尋帳號' }}
             </button>
           </div>
         </div>
@@ -43,7 +43,10 @@
               :size="52"
             />
             <div class="card-info">
-              <div class="card-nickname">{{ foundUser.nickname }}</div>
+              <div class="card-nickname-row">
+                <span class="card-nickname">{{ foundUser.nickname }}</span>
+                <span v-if="foundUser.isFriend" class="friend-badge">好友</span>
+              </div>
               <div class="card-username">@{{ foundUser.username }}</div>
               <div class="card-presence">
                 <span :class="['presence-dot-inline', { online: foundUser.online }]"></span>
@@ -53,8 +56,20 @@
           </div>
 
           <div class="card-action">
-            <button class="btn btn-primary start-chat-btn" @click="startChatWithUser">
-              💬 開始對話
+            <button
+              v-if="!foundUser.isFriend"
+              class="btn btn-primary add-friend-action-btn"
+              :disabled="addingFriend"
+              @click="handleAddFriendAndChat"
+            >
+              {{ addingFriend ? '加入中...' : '➕ 加為好友並開啟對話' }}
+            </button>
+            <button
+              v-else
+              class="btn btn-secondary start-chat-btn"
+              @click="startChatWithUser"
+            >
+              💬 開啟對話
             </button>
           </div>
         </div>
@@ -77,6 +92,7 @@ const contactsStore = useContactsStore();
 
 const searchUsername = ref('');
 const checking = ref(false);
+const addingFriend = ref(false);
 const errorMessage = ref('');
 const foundUser = ref(null);
 
@@ -98,17 +114,33 @@ const handleCheckUser = async () => {
   }
 };
 
+const handleAddFriendAndChat = async () => {
+  if (!foundUser.value) return;
+  addingFriend.value = true;
+  try {
+    const res = await userApi.addFriend(foundUser.value.username);
+    foundUser.value.isFriend = true;
+    // Refresh contacts in store
+    await contactsStore.fetchContacts();
+    chatStore.selectDirectChat(res.data || foundUser.value);
+    emit('close');
+  } catch (err) {
+    alert(err.message || '加入好友失敗');
+  } finally {
+    addingFriend.value = false;
+  }
+};
+
 const startChatWithUser = () => {
   if (!foundUser.value) return;
   chatStore.selectDirectChat(foundUser.value);
-  contactsStore.fetchContacts(); // Refresh list
   emit('close');
 };
 </script>
 
 <style scoped>
 .add-friend-dialog {
-  max-width: 440px;
+  max-width: 480px;
 }
 
 .search-account-form {
@@ -146,7 +178,7 @@ const startChatWithUser = () => {
 
 .found-user-card {
   background: #FAFAFA;
-  border: 1px solid var(--line-primary-light);
+  border: 1px solid var(--line-border);
   border-left: 4px solid var(--line-primary);
   border-radius: 8px;
   padding: 14px;
@@ -155,6 +187,7 @@ const startChatWithUser = () => {
   justify-content: space-between;
   margin-top: 14px;
   animation: fadeIn 0.2s ease;
+  gap: 10px;
 }
 
 .card-left {
@@ -169,10 +202,25 @@ const startChatWithUser = () => {
   gap: 2px;
 }
 
+.card-nickname-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .card-nickname {
   font-size: 15px;
   font-weight: 600;
   color: var(--line-text-primary);
+}
+
+.friend-badge {
+  font-size: 11px;
+  background-color: var(--line-primary-light);
+  color: var(--line-primary);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
 }
 
 .card-username {
@@ -200,8 +248,10 @@ const startChatWithUser = () => {
   background-color: #05A648;
 }
 
+.add-friend-action-btn,
 .start-chat-btn {
-  padding: 6px 14px;
-  font-size: 13px;
+  padding: 7px 12px;
+  font-size: 12px;
+  white-space: nowrap;
 }
 </style>

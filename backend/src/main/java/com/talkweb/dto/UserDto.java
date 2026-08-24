@@ -21,5 +21,6 @@ public class UserDto {
     private boolean mustChangePassword;
     private String status;
     private boolean online;
+    private Boolean isFriend;
     private OffsetDateTime createdAt;
 }

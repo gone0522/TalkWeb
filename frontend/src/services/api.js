@@ -54,7 +54,8 @@ export const userApi = {
     return `/api/users/${userId}/avatar${token ? `?token=${token}` : ''}`;
   },
   getContacts: (search) => api.get('/contacts', { params: { search } }),
-  checkContact: (username) => api.get('/contacts/check', { params: { username } })
+  checkContact: (username) => api.get('/contacts/check', { params: { username } }),
+  addFriend: (username) => api.post('/contacts/add', { username })
 };
 
 export const groupApi = {
