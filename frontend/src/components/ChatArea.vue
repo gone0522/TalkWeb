@@ -3,6 +3,17 @@
     <!-- Top Header -->
     <header class="chat-header">
       <div class="header-left">
+        <!-- Mobile Back Button -->
+        <button
+          class="mobile-back-btn"
+          title="返回通訊錄"
+          @click="$emit('back')"
+        >
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+
         <DefaultAvatar
           v-if="isDirect"
           :user-id="chatStore.chatTarget?.id"
@@ -112,7 +123,7 @@ import DefaultAvatar from './DefaultAvatar.vue';
 import EmojiPicker from './EmojiPicker.vue';
 import MessageBubble from './MessageBubble.vue';
 
-defineEmits(['openGroupDetail']);
+defineEmits(['openGroupDetail', 'back']);
 
 const authStore = useAuthStore();
 const chatStore = useChatStore();
@@ -371,15 +382,48 @@ const handleSend = () => {
   max-height: 100px;
 }
 
-.input-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 4px;
+.mobile-back-btn {
+  display: none;
+  background: none;
+  border: none;
+  padding: 6px;
+  margin-right: 2px;
+  margin-left: -6px;
+  cursor: pointer;
+  color: var(--line-text-primary);
+  border-radius: 50%;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
 }
 
-.send-btn {
-  padding: 6px 18px;
-  font-size: 13px;
-  border-radius: 16px;
+.mobile-back-btn:hover {
+  background-color: #F0F0F0;
+}
+
+/* Mobile Responsive Styling */
+@media (max-width: 768px) {
+  .mobile-back-btn {
+    display: flex;
+  }
+
+  .chat-header {
+    height: 52px;
+    padding: 0 12px;
+  }
+
+  .message-list-viewport {
+    padding: 12px 14px;
+  }
+
+  .chat-input-bar {
+    padding: 8px 12px 12px;
+  }
+
+  .emoji-picker-anchor {
+    left: 8px;
+    right: 8px;
+    bottom: 80px;
+  }
 }
 </style>

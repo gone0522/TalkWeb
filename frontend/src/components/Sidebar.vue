@@ -7,7 +7,7 @@
           :nickname="authStore.user?.nickname"
           :has-custom-avatar="authStore.user?.hasCustomAvatar"
           :icon-index="authStore.user?.avatarDefaultIcon"
-          :size="40"
+          :size="36"
         />
         <span class="presence-dot online"></span>
       </div>
@@ -20,6 +20,7 @@
           @click="$emit('switchTab', 'contacts')"
         >
           <span class="nav-icon">👤</span>
+          <span class="nav-label">好友</span>
         </button>
 
         <button
@@ -28,6 +29,7 @@
           @click="$emit('switchTab', 'groups')"
         >
           <span class="nav-icon">👥</span>
+          <span class="nav-label">群組</span>
           <span v-if="chatStore.totalUnreadCount > 0" class="badge-unread nav-badge">
             {{ chatStore.totalUnreadCount > 99 ? '99+' : chatStore.totalUnreadCount }}
           </span>
@@ -40,6 +42,7 @@
           @click="$emit('openAdmin')"
         >
           <span class="nav-icon">🛡️</span>
+          <span class="nav-label">管理</span>
         </button>
       </nav>
     </div>
@@ -48,9 +51,11 @@
     <div class="sidebar-bottom">
       <button class="nav-item" title="個人設定" @click="$emit('openProfile')">
         <span class="nav-icon">⚙️</span>
+        <span class="nav-label">設定</span>
       </button>
       <button class="nav-item logout-btn" title="登出" @click="handleLogout">
         <span class="nav-icon">🚪</span>
+        <span class="nav-label">登出</span>
       </button>
     </div>
   </aside>
@@ -138,6 +143,10 @@ const handleLogout = () => {
   font-size: 20px;
 }
 
+.nav-label {
+  display: none;
+}
+
 .nav-item:hover {
   color: #FFFFFF;
   background-color: var(--line-sidebar-hover);
@@ -175,5 +184,91 @@ const handleLogout = () => {
 
 .logout-btn:hover {
   color: #FF6B6B;
+}
+
+/* Mobile Bottom Navigation Bar */
+@media (max-width: 768px) {
+  .line-sidebar {
+    width: 100%;
+    height: 56px;
+    flex-direction: row;
+    justify-content: space-around;
+    padding: 0 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
+    z-index: 50;
+  }
+
+  .sidebar-top {
+    flex-direction: row;
+    align-items: center;
+    gap: 0;
+    flex: 1;
+    height: 100%;
+    justify-content: space-around;
+  }
+
+  .user-avatar-wrap {
+    display: none;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    gap: 0;
+    flex: 1;
+    height: 100%;
+    justify-content: space-around;
+  }
+
+  .sidebar-bottom {
+    flex-direction: row;
+    gap: 0;
+    width: auto;
+    flex: 0.7;
+    height: 100%;
+    justify-content: space-around;
+  }
+
+  .nav-item {
+    width: auto;
+    flex: 1;
+    height: 100%;
+    flex-direction: column;
+    gap: 2px;
+    padding: 4px 0;
+  }
+
+  .nav-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .nav-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 500;
+    color: #8E9BAE;
+    line-height: 1.2;
+  }
+
+  .nav-item.active .nav-label {
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+
+  .nav-item.active::before {
+    left: 20%;
+    right: 20%;
+    top: 0;
+    bottom: auto;
+    width: 60%;
+    height: 3px;
+    border-radius: 0 0 2px 2px;
+  }
+
+  .nav-badge {
+    top: 2px;
+    right: calc(50% - 18px);
+  }
 }
 </style>

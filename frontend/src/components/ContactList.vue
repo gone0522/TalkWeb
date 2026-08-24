@@ -288,4 +288,11 @@ const selectContact = (contact) => {
 .badge-col {
   flex-shrink: 0;
 }
+
+@media (max-width: 768px) {
+  .contact-list-panel {
+    width: 100%;
+    border-right: none;
+  }
+}
 </style>

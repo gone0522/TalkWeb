@@ -8,13 +8,14 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.security.Principal;
 import java.util.Collection;
 import java.util.Collections;
 
 @Getter
 @Builder
 @AllArgsConstructor
-public class UserPrincipal implements UserDetails {
+public class UserPrincipal implements UserDetails, Principal {
 
     private final Long id;
     private final String username;

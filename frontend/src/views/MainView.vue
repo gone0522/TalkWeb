@@ -1,27 +1,31 @@
 <template>
-  <div class="talkweb-layout-container">
-    <!-- Left Navigation Bar (56px) -->
+  <div class="talkweb-layout-container" :class="{ 'chat-open': Boolean(chatStore.chatTarget) }">
+    <!-- Left Navigation Bar (Desktop: 56px left bar, Mobile: bottom bar) -->
     <Sidebar
+      class="app-sidebar"
       :current-tab="currentTab"
       @switch-tab="handleSwitchTab"
       @open-profile="showProfileModal = true"
       @open-admin="showAdminModal = true"
     />
 
-    <!-- Middle List (280px) -->
-    <ContactList
-      v-if="currentTab === 'contacts'"
-    />
-    <GroupList
-      v-else-if="currentTab === 'groups'"
-      @open-create-group="showCreateGroupModal = true"
-    />
+    <!-- Middle List (Desktop: 280px, Mobile: Full Width) -->
+    <div class="app-list-container">
+      <ContactList
+        v-if="currentTab === 'contacts'"
+      />
+      <GroupList
+        v-else-if="currentTab === 'groups'"
+        @open-create-group="showCreateGroupModal = true"
+      />
+    </div>
 
-    <!-- Right Chat Area (Flexible Width) -->
+    <!-- Right Chat Area (Desktop: Flexible Width, Mobile: Full Screen when selected) -->
     <main class="chat-main-panel">
       <ChatArea
         v-if="chatStore.chatTarget"
         @open-group-detail="handleOpenGroupDetail"
+        @back="handleBackToList"
       />
       <div v-else class="no-chat-selected">
         <div class="welcome-badge-icon">
@@ -132,6 +136,11 @@ const handleSwitchTab = (tab) => {
   currentTab.value = tab;
 };
 
+const handleBackToList = () => {
+  chatStore.chatTarget = null;
+  chatStore.chatType = null;
+};
+
 const handleOpenGroupDetail = async (groupId) => {
   try {
     const detail = await groupStore.fetchGroupDetails(groupId);
@@ -166,6 +175,13 @@ const handlePasswordChanged = () => {
   display: flex;
   background-color: #FFFFFF;
   overflow: hidden;
+  position: relative;
+}
+
+.app-list-container {
+  display: flex;
+  height: 100%;
+  flex-shrink: 0;
 }
 
 .chat-main-panel {
@@ -173,6 +189,8 @@ const handlePasswordChanged = () => {
   height: 100%;
   overflow: hidden;
   background-color: var(--line-bg-chat);
+  display: flex;
+  flex-direction: column;
 }
 
 .no-chat-selected {
@@ -200,5 +218,46 @@ const handlePasswordChanged = () => {
 .welcome-desc {
   font-size: 13px;
   color: var(--line-text-secondary);
+}
+
+/* Responsive Web Design for Mobile */
+@media (max-width: 768px) {
+  .talkweb-layout-container {
+    flex-direction: column;
+  }
+
+  /* When NO chat is open on mobile: show list on top, navigation bar at bottom */
+  .talkweb-layout-container:not(.chat-open) .app-list-container {
+    flex: 1;
+    width: 100%;
+    height: calc(100vh - 56px);
+    display: flex;
+  }
+
+  .talkweb-layout-container:not(.chat-open) .app-sidebar {
+    width: 100%;
+    height: 56px;
+    flex-shrink: 0;
+    order: 2;
+  }
+
+  .talkweb-layout-container:not(.chat-open) .chat-main-panel {
+    display: none;
+  }
+
+  /* When CHAT IS OPEN on mobile: hide sidebar and list, show chat in full screen */
+  .talkweb-layout-container.chat-open .app-sidebar {
+    display: none;
+  }
+
+  .talkweb-layout-container.chat-open .app-list-container {
+    display: none;
+  }
+
+  .talkweb-layout-container.chat-open .chat-main-panel {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+  }
 }
 </style>

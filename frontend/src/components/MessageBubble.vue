@@ -227,4 +227,15 @@ const isPureEmoji = computed(() => {
   font-size: 40px !important;
   padding: 4px 8px !important;
 }
+
+@media (max-width: 768px) {
+  .message-body-wrap {
+    max-width: 86%;
+  }
+
+  .message-bubble {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
 </style>
