@@ -74,4 +74,10 @@ public class UserPrincipal implements UserDetails, Principal {
     public boolean isEnabled() {
         return "ACTIVE".equalsIgnoreCase(status);
     }
+
+    @Override
+    public String getName() {
+        return username;
+    }
 }
+

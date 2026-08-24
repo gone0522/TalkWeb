@@ -40,12 +40,11 @@ CREATE TABLE IF NOT EXISTS chatapp.group_members (
 -- 4. 訊息主表 (messages)
 CREATE TABLE IF NOT EXISTS chatapp.messages (
     id BIGSERIAL PRIMARY KEY,
-    chat_type VARCHAR(20) NOT NULL,
     sender_id BIGINT NOT NULL REFERENCES chatapp.users(id),
     receiver_id BIGINT REFERENCES chatapp.users(id),
     group_id BIGINT REFERENCES chatapp.groups(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
-    url_preview_json TEXT,
+    type VARCHAR(20) DEFAULT 'TEXT',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

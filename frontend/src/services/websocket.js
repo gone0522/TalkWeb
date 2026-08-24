@@ -5,7 +5,8 @@ class WebSocketService {
   constructor() {
     this.client = null;
     this.connected = false;
-    this.groupSubscriptions = new Map();
+    this.groupSubscriptions = new Map(); // groupId -> { msgSub, readSub }
+    this.pendingGroupSubs = new Map();   // groupId -> { onGroupMessage, onGroupRead }
     this.onMessageReceived = null;
     this.onReadReceiptReceived = null;
     this.onPresenceChanged = null;
@@ -70,25 +71,34 @@ class WebSocketService {
           }
         }
       });
+
+      // Resubscribe to all pending groups
+      this.pendingGroupSubs.forEach((handlers, groupId) => {
+        this._doSubscribeGroup(groupId, handlers.onGroupMessage, handlers.onGroupRead);
+      });
     };
 
     this.client.onStompError = (frame) => {
-      console.error('[WebSocket] STOMP 錯誤:', frame.headers['message'], frame.body);
+      console.error('[WebSocket] STOMP 錯誤:', frame.headers?.message, frame.body);
     };
 
     this.client.onDisconnect = () => {
       this.connected = false;
+      this.groupSubscriptions.clear();
       console.log('[WebSocket] 連線已中斷');
     };
 
     this.client.activate();
   }
 
-  subscribeToGroup(groupId, onGroupMessage, onGroupRead) {
+  _doSubscribeGroup(groupId, onGroupMessage, onGroupRead) {
     if (!this.client || !this.connected) return;
 
-    if (this.groupSubscriptions.has(groupId)) {
-      return;
+    // Unsubscribe existing if any
+    const existing = this.groupSubscriptions.get(groupId);
+    if (existing) {
+      existing.msgSub?.unsubscribe();
+      existing.readSub?.unsubscribe();
     }
 
     const msgSub = this.client.subscribe(`/topic/group.${groupId}`, (message) => {
@@ -108,17 +118,28 @@ class WebSocketService {
     this.groupSubscriptions.set(groupId, { msgSub, readSub });
   }
 
+  subscribeToGroup(groupId, onGroupMessage, onGroupRead) {
+    this.pendingGroupSubs.set(groupId, { onGroupMessage, onGroupRead });
+    if (this.connected) {
+      this._doSubscribeGroup(groupId, onGroupMessage, onGroupRead);
+    }
+  }
+
   unsubscribeFromGroup(groupId) {
+    this.pendingGroupSubs.delete(groupId);
     const subs = this.groupSubscriptions.get(groupId);
     if (subs) {
-      subs.msgSub.unsubscribe();
-      subs.readSub.unsubscribe();
+      subs.msgSub?.unsubscribe();
+      subs.readSub?.unsubscribe();
       this.groupSubscriptions.delete(groupId);
     }
   }
 
   sendDirectMessage(receiverId, content, type = 'TEXT') {
-    if (!this.client || !this.connected) return false;
+    if (!this.client || !this.connected) {
+      console.warn('[WebSocket] 尚未連線，無法發送私聊訊息');
+      return false;
+    }
     this.client.publish({
       destination: '/app/chat.sendDirect',
       body: JSON.stringify({ receiverId, content, type })
@@ -127,7 +148,10 @@ class WebSocketService {
   }
 
   sendGroupMessage(groupId, content, type = 'TEXT') {
-    if (!this.client || !this.connected) return false;
+    if (!this.client || !this.connected) {
+      console.warn('[WebSocket] 尚未連線，無法發送群組訊息');
+      return false;
+    }
     this.client.publish({
       destination: '/app/chat.sendGroup',
       body: JSON.stringify({ groupId, content, type })
@@ -146,6 +170,7 @@ class WebSocketService {
 
   disconnect() {
     if (this.client) {
+      this.pendingGroupSubs.clear();
       this.groupSubscriptions.clear();
       this.client.deactivate();
       this.connected = false;
@@ -156,3 +181,4 @@ class WebSocketService {
 
 export const wsService = new WebSocketService();
 export default wsService;
+
