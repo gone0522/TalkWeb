@@ -291,8 +291,9 @@ const selectContact = (contact) => {
 
 @media (max-width: 768px) {
   .contact-list-panel {
-    width: 100%;
-    border-right: none;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-right: none !important;
   }
 }
 </style>

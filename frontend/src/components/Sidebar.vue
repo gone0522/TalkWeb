@@ -189,53 +189,53 @@ const handleLogout = () => {
 /* Mobile Bottom Navigation Bar */
 @media (max-width: 768px) {
   .line-sidebar {
-    width: 100%;
-    height: 56px;
-    flex-direction: row;
-    justify-content: space-around;
-    padding: 0 6px;
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15);
-    z-index: 50;
+    width: 100% !important;
+    height: 56px !important;
+    flex-direction: row !important;
+    justify-content: space-around !important;
+    padding: 0 6px !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.15) !important;
+    z-index: 50 !important;
   }
 
   .sidebar-top {
-    flex-direction: row;
-    align-items: center;
-    gap: 0;
-    flex: 1;
-    height: 100%;
-    justify-content: space-around;
+    flex-direction: row !important;
+    align-items: center !important;
+    gap: 0 !important;
+    flex: 1 !important;
+    height: 100% !important;
+    justify-content: space-around !important;
   }
 
   .user-avatar-wrap {
-    display: none;
+    display: none !important;
   }
 
   .sidebar-nav {
-    flex-direction: row;
-    gap: 0;
-    flex: 1;
-    height: 100%;
-    justify-content: space-around;
+    flex-direction: row !important;
+    gap: 0 !important;
+    flex: 1 !important;
+    height: 100% !important;
+    justify-content: space-around !important;
   }
 
   .sidebar-bottom {
-    flex-direction: row;
-    gap: 0;
-    width: auto;
-    flex: 0.7;
-    height: 100%;
-    justify-content: space-around;
+    flex-direction: row !important;
+    gap: 0 !important;
+    width: auto !important;
+    flex: 0.7 !important;
+    height: 100% !important;
+    justify-content: space-around !important;
   }
 
   .nav-item {
-    width: auto;
-    flex: 1;
-    height: 100%;
-    flex-direction: column;
-    gap: 2px;
-    padding: 4px 0;
+    width: auto !important;
+    flex: 1 !important;
+    height: 100% !important;
+    flex-direction: column !important;
+    gap: 2px !important;
+    padding: 4px 0 !important;
   }
 
   .nav-icon {
@@ -244,31 +244,31 @@ const handleLogout = () => {
   }
 
   .nav-label {
-    display: block;
-    font-size: 10px;
-    font-weight: 500;
-    color: #8E9BAE;
-    line-height: 1.2;
+    display: block !important;
+    font-size: 10px !important;
+    font-weight: 500 !important;
+    color: #8E9BAE !important;
+    line-height: 1.2 !important;
   }
 
   .nav-item.active .nav-label {
-    color: #FFFFFF;
-    font-weight: 600;
+    color: #FFFFFF !important;
+    font-weight: 600 !important;
   }
 
   .nav-item.active::before {
-    left: 20%;
-    right: 20%;
-    top: 0;
-    bottom: auto;
-    width: 60%;
-    height: 3px;
-    border-radius: 0 0 2px 2px;
+    left: 20% !important;
+    right: 20% !important;
+    top: 0 !important;
+    bottom: auto !important;
+    width: 60% !important;
+    height: 3px !important;
+    border-radius: 0 0 2px 2px !important;
   }
 
   .nav-badge {
-    top: 2px;
-    right: calc(50% - 18px);
+    top: 2px !important;
+    right: calc(50% - 18px) !important;
   }
 }
 </style>

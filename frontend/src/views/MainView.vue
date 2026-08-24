@@ -223,41 +223,47 @@ const handlePasswordChanged = () => {
 /* Responsive Web Design for Mobile */
 @media (max-width: 768px) {
   .talkweb-layout-container {
-    flex-direction: column;
+    flex-direction: column !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: hidden !important;
   }
 
   /* When NO chat is open on mobile: show list on top, navigation bar at bottom */
   .talkweb-layout-container:not(.chat-open) .app-list-container {
-    flex: 1;
-    width: 100%;
-    height: calc(100vh - 56px);
-    display: flex;
+    flex: 1 !important;
+    width: 100% !important;
+    height: calc(100vh - 56px) !important;
+    display: flex !important;
+    overflow: hidden !important;
   }
 
   .talkweb-layout-container:not(.chat-open) .app-sidebar {
-    width: 100%;
-    height: 56px;
-    flex-shrink: 0;
-    order: 2;
+    width: 100% !important;
+    height: 56px !important;
+    flex-shrink: 0 !important;
+    order: 2 !important;
+    display: flex !important;
   }
 
   .talkweb-layout-container:not(.chat-open) .chat-main-panel {
-    display: none;
+    display: none !important;
   }
 
   /* When CHAT IS OPEN on mobile: hide sidebar and list, show chat in full screen */
   .talkweb-layout-container.chat-open .app-sidebar {
-    display: none;
+    display: none !important;
   }
 
   .talkweb-layout-container.chat-open .app-list-container {
-    display: none;
+    display: none !important;
   }
 
   .talkweb-layout-container.chat-open .chat-main-panel {
-    width: 100vw;
-    height: 100vh;
-    display: flex;
+    width: 100vw !important;
+    height: 100vh !important;
+    display: flex !important;
+    flex: 1 1 100% !important;
   }
 }
 </style>
