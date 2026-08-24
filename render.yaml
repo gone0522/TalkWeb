@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: talkweb-app
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    region: singapore
+    envVars:
+      - key: EXISTING_DB_HOST
+        fromDatabase:
+          name: talkweb-db
+          property: host
+      - key: EXISTING_DB_PORT
+        fromDatabase:
+          name: talkweb-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: talkweb-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: talkweb-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: talkweb-db
+          property: password
+      - key: JWT_SECRET
+        value: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+
+databases:
+  - name: talkweb-db
+    databaseName: chatapp
+    user: chatapp_user
+    plan: free
+    region: singapore
