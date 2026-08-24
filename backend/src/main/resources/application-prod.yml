@@ -4,7 +4,13 @@ spring:
     username: ${DB_USERNAME:chatapp_user}
     password: ${DB_PASSWORD:your_secure_password}
     driver-class-name: org.postgresql.Driver
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      continue-on-error: true
   jpa:
+    defer-datasource-initialization: false
     hibernate:
       ddl-auto: update
     show-sql: false

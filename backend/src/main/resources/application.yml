@@ -3,6 +3,11 @@ spring:
     name: talkweb-app
   profiles:
     active: dev
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+      continue-on-error: true
 
 server:
   port: 8080
