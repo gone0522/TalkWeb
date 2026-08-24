@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${EXISTING_DB_HOST:localhost}:${EXISTING_DB_PORT:5432}/${DB_NAME:chatapp}?currentSchema=chatapp
+    username: ${DB_USERNAME:chatapp_user}
+    password: ${DB_PASSWORD:your_secure_password}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        default_schema: chatapp
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+logging:
+  level:
+    com.talkweb: INFO
+    org.springframework.web: WARN
+    org.springframework.security: WARN

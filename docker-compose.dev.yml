@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  postgres-dev:
+    image: postgres:14-alpine
+    container_name: talkweb-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chatapp
+      POSTGRES_USER: chatapp_user
+      POSTGRES_PASSWORD: dev_password_123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+volumes:
+  pgdata_dev:
