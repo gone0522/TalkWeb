@@ -29,7 +29,7 @@
           </div>
 
           <div class="avatar-tips">
-            支援 JPG / PNG / WebP（單檔限制 500KB 以內，系統將自動裁切縮圖）
+            支援 JPG / PNG / WebP（系統會自動裁切並最佳化壓縮後上傳）
           </div>
         </div>
 
@@ -127,21 +127,74 @@ const saving = ref(false);
 const statusMessage = ref('');
 const isSuccess = ref(false);
 
+// Helper to compress and square-crop image before upload
+const compressAvatar = (file, targetSize = 256, quality = 0.85) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('讀取圖片檔案失敗'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('圖片格式無效或已損壞'));
+      img.onload = () => {
+        try {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+
+          // Calculate center crop square
+          const minDim = Math.min(img.width, img.height);
+          const startX = (img.width - minDim) / 2;
+          const startY = (img.height - minDim) / 2;
+
+          const size = Math.min(minDim, targetSize);
+          canvas.width = size;
+          canvas.height = size;
+
+          // Draw cropped & scaled square image
+          ctx.drawImage(
+            img,
+            startX, startY, minDim, minDim,
+            0, 0, size, size
+          );
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], 'avatar.png', {
+                  type: 'image/png',
+                  lastModified: Date.now()
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error('圖片壓縮失敗'));
+              }
+            },
+            'image/png'
+          );
+        } catch (err) {
+          reject(err);
+        }
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 const handleAvatarFileChange = async (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
 
-  if (file.size > 2 * 1024 * 1024) {
-    statusMessage.value = '圖片檔案過大，請選擇小於 2MB 的圖片';
-    isSuccess.value = false;
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('file', file);
-
   try {
+    statusMessage.value = '圖片處理與最佳化壓縮中...';
+    isSuccess.value = false;
+
+    // 1. Client-side square-crop & compress to tiny PNG (< 50KB)
+    const compressedFile = await compressAvatar(file, 256, 0.85);
+
     statusMessage.value = '頭像上傳中...';
+    const formData = new FormData();
+    formData.append('file', compressedFile);
+
     await userApi.uploadAvatar(formData);
     await authStore.fetchCurrentUser();
     statusMessage.value = '頭像更新成功！';
@@ -149,6 +202,8 @@ const handleAvatarFileChange = async (event) => {
   } catch (err) {
     statusMessage.value = err.message || '頭像上傳失敗';
     isSuccess.value = false;
+  } finally {
+    event.target.value = '';
   }
 };
 
