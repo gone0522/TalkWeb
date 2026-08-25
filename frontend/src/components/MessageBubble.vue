@@ -26,13 +26,31 @@
         </div>
 
         <!-- The Message Bubble -->
-        <div :class="['message-bubble', isMe ? 'bubble-me' : 'bubble-other', { 'pure-emoji': isPureEmoji }]">
+        <div :class="['message-bubble', isMe ? 'bubble-me' : 'bubble-other', { 'pure-emoji': isPureEmoji, 'is-image-bubble': isImageMessage }]">
+          <!-- Image Content -->
+          <div v-if="isImageMessage" class="bubble-image-wrap" @click="$emit('previewImage', message.content)">
+            <img
+              :src="message.content"
+              alt="聊天圖片"
+              class="chat-image-content"
+              loading="lazy"
+            />
+            <div class="image-zoom-hint" title="點擊放大檢視">
+              <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="21" y1="21" x2="16.5" y2="16.5"></line>
+                <line x1="11" y1="8" x2="11" y2="14"></line>
+                <line x1="8" y1="11" x2="14" y2="11"></line>
+              </svg>
+            </div>
+          </div>
+
           <!-- Text Content with Auto-Link -->
-          <div class="bubble-text" v-html="renderedContent"></div>
+          <div v-else class="bubble-text" v-html="renderedContent"></div>
 
           <!-- Link Preview Card if present -->
           <UrlPreviewCard
-            v-if="message.linkPreview"
+            v-if="!isImageMessage && message.linkPreview"
             :preview="message.linkPreview"
           />
         </div>
@@ -66,8 +84,14 @@ const props = defineProps({
   }
 });
 
+defineEmits(['previewImage']);
+
 const isMe = computed(() => {
   return props.message.senderId === props.currentUserId;
+});
+
+const isImageMessage = computed(() => {
+  return props.message.type === 'IMAGE' || (props.message.content && props.message.content.startsWith('data:image/'));
 });
 
 const formattedTime = computed(() => {
@@ -104,6 +128,7 @@ const renderedContent = computed(() => {
 
 // Check if content is purely emojis (1-3 emojis)
 const isPureEmoji = computed(() => {
+  if (isImageMessage.value) return false;
   const text = props.message.content?.trim();
   if (!text) return false;
   // Emoji regex check
@@ -197,6 +222,13 @@ const isPureEmoji = computed(() => {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
+.message-bubble.is-image-bubble {
+  padding: 4px;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
 .bubble-me {
   background-color: var(--line-bubble-me);
   color: #111111;
@@ -228,6 +260,55 @@ const isPureEmoji = computed(() => {
   padding: 4px 8px !important;
 }
 
+/* Image Bubble Styling */
+.bubble-image-wrap {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: zoom-in;
+  display: inline-block;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  max-width: 260px;
+  background-color: #E8ECEF;
+}
+
+.bubble-image-wrap:hover {
+  transform: scale(1.01);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+}
+
+.chat-image-content {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  width: auto;
+  height: auto;
+  border-radius: 14px;
+  object-fit: cover;
+}
+
+.image-zoom-hint {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #FFFFFF;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.bubble-image-wrap:hover .image-zoom-hint {
+  opacity: 1;
+}
+
 @media (max-width: 768px) {
   .message-body-wrap {
     max-width: 86%;
@@ -236,6 +317,14 @@ const isPureEmoji = computed(() => {
   .message-bubble {
     padding: 8px 12px;
     font-size: 14px;
+  }
+
+  .bubble-image-wrap {
+    max-width: 220px;
+  }
+
+  .image-zoom-hint {
+    opacity: 0.75;
   }
 }
 </style>

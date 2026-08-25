@@ -229,11 +229,13 @@ public class ChatMessageService {
             readCount = readStatusRepository.countReadCountByMessageId(message.getId());
         }
 
-        // Link Preview resolution
+        // Link Preview resolution (only for non-image text messages)
         LinkPreviewDto preview = null;
-        String firstUrl = linkPreviewService.extractFirstUrl(message.getContent());
-        if (firstUrl != null) {
-            preview = linkPreviewService.fetchPreview(firstUrl);
+        if (!"IMAGE".equalsIgnoreCase(message.getType()) && message.getContent() != null && !message.getContent().startsWith("data:image/")) {
+            String firstUrl = linkPreviewService.extractFirstUrl(message.getContent());
+            if (firstUrl != null) {
+                preview = linkPreviewService.fetchPreview(firstUrl);
+            }
         }
 
         return ChatMessageDto.builder()

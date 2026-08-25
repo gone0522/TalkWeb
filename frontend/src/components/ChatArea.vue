@@ -68,7 +68,14 @@
         :message="msg"
         :current-user-id="authStore.user?.id"
         :show-sender-name="!isDirect"
+        @preview-image="handlePreviewImage"
       />
+    </div>
+
+    <!-- Uploading / Compressing Indicator -->
+    <div v-if="isCompressing" class="compressing-banner">
+      <span class="spinner-small"></span>
+      <span>圖片壓縮與傳送中...</span>
     </div>
 
     <!-- Bottom Input Bar -->
@@ -88,29 +95,54 @@
         >
           😊
         </button>
+
+        <button
+          type="button"
+          class="tool-btn"
+          title="傳送圖片"
+          :disabled="isCompressing"
+          @click="triggerImageUpload"
+        >
+          🖼️
+        </button>
+        <input
+          ref="fileInputRef"
+          type="file"
+          accept="image/*"
+          class="hidden-file-input"
+          @change="onImageFileChange"
+        />
       </div>
 
       <textarea
         ref="inputTextarea"
         v-model="inputText"
         class="chat-textarea"
-        placeholder="輸入訊息... (Enter 發送, Shift+Enter 換行)"
+        placeholder="輸入訊息... (Enter 發送, Shift+Enter 換行, 支援直接貼上圖片)"
         rows="2"
         @keydown.enter.exact.prevent="handleSend"
         @click="showEmojiPicker = false"
+        @paste="handlePaste"
       ></textarea>
 
       <div class="input-actions">
         <button
           type="button"
           class="btn btn-primary send-btn"
-          :disabled="!inputText.trim()"
+          :disabled="!inputText.trim() && !isCompressing"
           @click="handleSend"
         >
           發送
         </button>
       </div>
     </footer>
+
+    <!-- Image Lightbox Modal -->
+    <ImageLightbox
+      v-if="previewImageUrl"
+      :src="previewImageUrl"
+      @close="previewImageUrl = null"
+    />
   </div>
 </template>
 
@@ -121,6 +153,7 @@ import { useChatStore } from '../stores/chatStore';
 import { useContactsStore } from '../stores/contactsStore';
 import DefaultAvatar from './DefaultAvatar.vue';
 import EmojiPicker from './EmojiPicker.vue';
+import ImageLightbox from './ImageLightbox.vue';
 import MessageBubble from './MessageBubble.vue';
 
 defineEmits(['openGroupDetail', 'back']);
@@ -133,6 +166,9 @@ const inputText = ref('');
 const showEmojiPicker = ref(false);
 const messageContainer = ref(null);
 const inputTextarea = ref(null);
+const fileInputRef = ref(null);
+const isCompressing = ref(false);
+const previewImageUrl = ref(null);
 
 const isDirect = computed(() => chatStore.chatType === 'DIRECT');
 
@@ -162,6 +198,7 @@ watch(() => chatStore.messages.length, () => {
 watch(() => chatStore.chatTarget?.id, () => {
   showEmojiPicker.value = false;
   inputText.value = '';
+  previewImageUrl.value = null;
   scrollToBottom();
 });
 
@@ -202,6 +239,93 @@ const handleSend = () => {
   inputText.value = '';
   showEmojiPicker.value = false;
   scrollToBottom();
+};
+
+const triggerImageUpload = () => {
+  if (fileInputRef.value) {
+    fileInputRef.value.click();
+  }
+};
+
+// Canvas-based client-side image compression
+const compressImage = (file, maxWidth = 1280, maxHeight = 1280, quality = 0.82) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+const sendImageFile = async (file) => {
+  if (!file || !file.type.startsWith('image/')) {
+    alert('請選擇有效的圖片檔案');
+    return;
+  }
+  isCompressing.value = true;
+  try {
+    const compressedDataUrl = await compressImage(file);
+    await chatStore.sendMessage(compressedDataUrl, 'IMAGE');
+    scrollToBottom();
+  } catch (err) {
+    console.error('圖片壓縮發送失敗:', err);
+    alert('圖片壓縮處理失敗，請重試');
+  } finally {
+    isCompressing.value = false;
+    if (fileInputRef.value) {
+      fileInputRef.value.value = '';
+    }
+  }
+};
+
+const onImageFileChange = async (e) => {
+  const file = e.target.files?.[0];
+  if (file) {
+    await sendImageFile(file);
+  }
+};
+
+// Clipboard image paste support
+const handlePaste = async (e) => {
+  const items = e.clipboardData?.items;
+  if (!items) return;
+  for (const item of items) {
+    if (item.type.indexOf('image') !== -1) {
+      const file = item.getAsFile();
+      if (file) {
+        e.preventDefault();
+        await sendImageFile(file);
+        break;
+      }
+    }
+  }
+};
+
+const handlePreviewImage = (imageUrl) => {
+  previewImageUrl.value = imageUrl;
 };
 </script>
 
@@ -340,6 +464,36 @@ const handleSend = () => {
   font-size: 13px;
 }
 
+.hidden-file-input {
+  display: none !important;
+}
+
+.compressing-banner {
+  background-color: #E8F8EE;
+  color: var(--line-primary-hover);
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid rgba(6, 199, 85, 0.2);
+  animation: fadeIn 0.2s ease;
+}
+
+.spinner-small {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(6, 199, 85, 0.2);
+  border-top-color: var(--line-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 /* Chat Input Bar */
 .chat-input-bar {
   flex-shrink: 0;
@@ -379,6 +533,11 @@ const handleSend = () => {
 
 .tool-btn:hover, .tool-btn.active {
   background-color: #F0F0F0;
+}
+
+.tool-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .chat-textarea {
