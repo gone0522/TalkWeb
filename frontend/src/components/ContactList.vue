@@ -5,9 +5,17 @@
         <div class="panel-title">
           好友 <span class="count-badge">({{ contactsStore.filteredContacts.length }})</span>
         </div>
-        <button class="add-friend-header-btn" title="搜尋帳號新增好友" @click="showAddFriendModal = true">
-          ➕ 新增好友
-        </button>
+        <div class="header-actions-group">
+          <button class="header-icon-btn add-btn" title="搜尋帳號新增好友" @click="showAddFriendModal = true">
+            ➕ 新增
+          </button>
+          <button class="header-icon-btn action-btn" title="個人設定與修改密碼" @click="$emit('openProfile')">
+            ⚙️ 設定
+          </button>
+          <button class="header-icon-btn action-btn logout" title="登出切換帳號" @click="handleLogout">
+            🚪 登出
+          </button>
+        </div>
       </div>
       <div class="search-box">
         <span class="search-icon">🔍</span>
@@ -85,11 +93,15 @@
 
 <script setup>
 import { onMounted, ref } from 'vue';
+import { useAuthStore } from '../stores/authStore';
 import { useChatStore } from '../stores/chatStore';
 import { useContactsStore } from '../stores/contactsStore';
 import AddFriendModal from './AddFriendModal.vue';
 import DefaultAvatar from './DefaultAvatar.vue';
 
+defineEmits(['openProfile']);
+
+const authStore = useAuthStore();
 const contactsStore = useContactsStore();
 const chatStore = useChatStore();
 
@@ -110,6 +122,13 @@ const getUnread = (userId) => {
 const selectContact = (contact) => {
   chatStore.selectDirectChat(contact);
 };
+
+const handleLogout = () => {
+  if (confirm('確定要登出系統以更換帳號嗎？')) {
+    authStore.logout();
+    window.location.reload();
+  }
+};
 </script>
 
 <style scoped>
@@ -124,11 +143,11 @@ const selectContact = (contact) => {
 }
 
 .panel-header {
-  padding: 16px 14px 12px;
+  padding: 14px 12px 10px;
   border-bottom: 1px solid var(--line-border);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   background-color: var(--line-panel-header-bg);
 }
 
@@ -136,23 +155,56 @@ const selectContact = (contact) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
 }
 
-.add-friend-header-btn {
-  background: var(--line-primary-light);
-  color: var(--line-primary);
-  border: 1px solid var(--line-primary);
+.header-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.header-icon-btn {
+  background: var(--line-panel-bg);
+  border: 1px solid var(--line-border);
   border-radius: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
+  padding: 4px 6px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.add-friend-header-btn:hover {
+.header-icon-btn.add-btn {
+  background: var(--line-primary-light);
+  color: var(--line-primary);
+  border-color: rgba(6, 199, 85, 0.3);
+}
+
+.header-icon-btn.add-btn:hover {
   background: var(--line-primary);
   color: #FFFFFF;
+}
+
+.header-icon-btn.action-btn {
+  color: var(--line-text-primary);
+}
+
+.header-icon-btn.action-btn:hover {
+  background: #EAEAEA;
+}
+
+.header-icon-btn.logout {
+  color: #D32F2F;
+}
+
+.header-icon-btn.logout:hover {
+  background: #FFEBEE;
+  border-color: #FFCDD2;
 }
 
 .panel-title {

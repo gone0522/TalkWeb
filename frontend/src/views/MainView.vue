@@ -13,10 +13,12 @@
     <div class="app-list-container">
       <ContactList
         v-if="currentTab === 'contacts'"
+        @open-profile="showProfileModal = true"
       />
       <GroupList
         v-else-if="currentTab === 'groups'"
         @open-create-group="showCreateGroupModal = true"
+        @open-profile="showProfileModal = true"
       />
     </div>
 
@@ -172,6 +174,7 @@ const handlePasswordChanged = () => {
 .talkweb-layout-container {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   background-color: #FFFFFF;
   overflow: hidden;
@@ -182,11 +185,13 @@ const handlePasswordChanged = () => {
   display: flex;
   height: 100%;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
 .chat-main-panel {
   flex: 1;
   height: 100%;
+  min-width: 0;
   overflow: hidden;
   background-color: var(--line-bg-chat);
   display: flex;
@@ -226,14 +231,16 @@ const handlePasswordChanged = () => {
     flex-direction: column !important;
     width: 100vw !important;
     height: 100vh !important;
+    height: 100dvh !important;
     overflow: hidden !important;
   }
 
   /* When NO chat is open on mobile: show list on top, navigation bar at bottom */
   .talkweb-layout-container:not(.chat-open) .app-list-container {
-    flex: 1 !important;
+    flex: 1 1 0% !important;
     width: 100% !important;
-    height: calc(100vh - 56px) !important;
+    height: auto !important;
+    min-height: 0 !important;
     display: flex !important;
     overflow: hidden !important;
   }
@@ -261,9 +268,11 @@ const handlePasswordChanged = () => {
 
   .talkweb-layout-container.chat-open .chat-main-panel {
     width: 100vw !important;
-    height: 100vh !important;
+    height: 100% !important;
+    height: 100dvh !important;
     display: flex !important;
     flex: 1 1 100% !important;
+    overflow: hidden !important;
   }
 }
 </style>

@@ -5,13 +5,21 @@
         <div class="panel-title">
           群組 <span class="count-badge">({{ groupStore.groups.length }})</span>
         </div>
-        <button
-          class="create-group-btn"
-          title="建立新群組"
-          @click="$emit('openCreateGroup')"
-        >
-          ➕ 建立群組
-        </button>
+        <div class="header-actions-group">
+          <button
+            class="header-icon-btn create-btn"
+            title="建立新群組"
+            @click="$emit('openCreateGroup')"
+          >
+            ➕ 建立
+          </button>
+          <button class="header-icon-btn action-btn" title="個人設定與修改密碼" @click="$emit('openProfile')">
+            ⚙️ 設定
+          </button>
+          <button class="header-icon-btn action-btn logout" title="登出切換帳號" @click="handleLogout">
+            🚪 登出
+          </button>
+        </div>
       </div>
     </div>
 
@@ -60,11 +68,13 @@
 
 <script setup>
 import { onMounted } from 'vue';
+import { useAuthStore } from '../stores/authStore';
 import { useChatStore } from '../stores/chatStore';
 import { useGroupStore } from '../stores/groupStore';
 
-defineEmits(['openCreateGroup']);
+defineEmits(['openCreateGroup', 'openProfile']);
 
+const authStore = useAuthStore();
 const groupStore = useGroupStore();
 const chatStore = useChatStore();
 
@@ -83,6 +93,13 @@ const getUnread = (groupId) => {
 const selectGroup = (group) => {
   chatStore.selectGroupChat(group);
 };
+
+const handleLogout = () => {
+  if (confirm('確定要登出系統以更換帳號嗎？')) {
+    authStore.logout();
+    window.location.reload();
+  }
+};
 </script>
 
 <style scoped>
@@ -97,7 +114,7 @@ const selectGroup = (group) => {
 }
 
 .panel-header {
-  padding: 16px 14px 12px;
+  padding: 14px 12px 10px;
   border-bottom: 1px solid var(--line-border);
   background-color: var(--line-panel-header-bg);
 }
@@ -106,38 +123,56 @@ const selectGroup = (group) => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
 }
 
-.panel-title {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--line-text-primary);
+.header-actions-group {
   display: flex;
   align-items: center;
   gap: 4px;
 }
 
-.count-badge {
-  font-size: 13px;
-  color: var(--line-text-secondary);
-  font-weight: 500;
-}
-
-.create-group-btn {
-  background-color: #E8F8EE;
-  color: var(--line-primary-hover);
-  border: 1px solid rgba(6, 199, 85, 0.3);
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 12px;
+.header-icon-btn {
+  background: var(--line-panel-bg);
+  border: 1px solid var(--line-border);
+  border-radius: 6px;
+  padding: 4px 6px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
-.create-group-btn:hover {
+.header-icon-btn.create-btn {
+  background-color: #E8F8EE;
+  color: var(--line-primary-hover);
+  border-color: rgba(6, 199, 85, 0.3);
+}
+
+.header-icon-btn.create-btn:hover {
   background-color: var(--line-primary);
   color: #FFFFFF;
+}
+
+.header-icon-btn.action-btn {
+  color: var(--line-text-primary);
+}
+
+.header-icon-btn.action-btn:hover {
+  background: #EAEAEA;
+}
+
+.header-icon-btn.logout {
+  color: #D32F2F;
+}
+
+.header-icon-btn.logout:hover {
+  background: #FFEBEE;
+  border-color: #FFCDD2;
 }
 
 .groups-scroll-area {

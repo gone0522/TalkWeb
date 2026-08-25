@@ -1,6 +1,22 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: talkweb-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chatapp
+      POSTGRES_USER: chatapp_user
+      POSTGRES_PASSWORD: dev_password_123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata_talkweb:/var/lib/postgresql/data
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - talkweb-net
+
   app:
     build:
       context: .
@@ -8,14 +24,24 @@ services:
     image: talkweb-app:1.0.0
     container_name: talkweb-app
     restart: unless-stopped
+    depends_on:
+      - postgres
     ports:
       - "8080:8080"
     environment:
-      - EXISTING_DB_HOST=${EXISTING_DB_HOST:-localhost}
-      - EXISTING_DB_PORT=${EXISTING_DB_PORT:-5432}
-      - DB_NAME=${DB_NAME:-chatapp}
-      - DB_USERNAME=${DB_USERNAME:-chatapp_user}
-      - DB_PASSWORD=${DB_PASSWORD:-your_secure_password}
-      - JWT_SECRET=${JWT_SECRET:-404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
-      - AVATAR_MAX_SIZE_KB=${AVATAR_MAX_SIZE_KB:-500}
+      - EXISTING_DB_HOST=postgres
+      - EXISTING_DB_PORT=5432
+      - DB_NAME=chatapp
+      - DB_USERNAME=chatapp_user
+      - DB_PASSWORD=dev_password_123
+      - JWT_SECRET=404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+      - AVATAR_MAX_SIZE_KB=500
       - SPRING_PROFILES_ACTIVE=prod
+    networks:
+      - talkweb-net
+
+volumes:
+  pgdata_talkweb:
+
+networks:
+  talkweb-net:

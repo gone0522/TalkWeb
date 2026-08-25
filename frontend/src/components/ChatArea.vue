@@ -210,8 +210,11 @@ const handleSend = () => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  height: 100dvh;
+  max-height: 100%;
   background-color: var(--line-bg-chat);
   position: relative;
+  overflow: hidden;
 }
 
 .chat-header {
@@ -224,6 +227,7 @@ const handleSend = () => {
   justify-content: space-between;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
   z-index: 10;
+  flex-shrink: 0;
 }
 
 .header-left {
@@ -298,8 +302,12 @@ const handleSend = () => {
 }
 
 .message-list-viewport {
-  flex: 1;
+  flex: 1 1 0%;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
   padding: 16px 20px;
   display: flex;
   flex-direction: column;
@@ -334,12 +342,15 @@ const handleSend = () => {
 
 /* Chat Input Bar */
 .chat-input-bar {
+  flex-shrink: 0;
   background-color: #FFFFFF;
   border-top: 1px solid var(--line-border);
   padding: 8px 16px 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));
   display: flex;
   flex-direction: column;
   position: relative;
+  z-index: 10;
 }
 
 .emoji-picker-anchor {
@@ -379,7 +390,19 @@ const handleSend = () => {
   font-family: inherit;
   line-height: 1.4;
   color: var(--line-text-primary);
+  min-height: 40px;
   max-height: 100px;
+}
+
+.input-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.send-btn {
+  padding: 6px 14px;
+  font-size: 13px;
 }
 
 .mobile-back-btn {
@@ -413,17 +436,24 @@ const handleSend = () => {
   }
 
   .message-list-viewport {
-    padding: 12px 14px;
+    padding: 10px 12px;
   }
 
   .chat-input-bar {
-    padding: 8px 12px 12px;
+    padding: 6px 10px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom, 10px));
+  }
+
+  .chat-textarea {
+    font-size: 14px;
+    min-height: 36px;
+    max-height: 76px;
   }
 
   .emoji-picker-anchor {
     left: 8px;
     right: 8px;
-    bottom: 80px;
+    bottom: 75px;
   }
 }
 </style>
