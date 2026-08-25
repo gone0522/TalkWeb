@@ -27,15 +27,15 @@ class WebSocketService {
         token: token
       },
       webSocketFactory: () => {
-        // Fallback to SockJS if needed
+        // Fallback to SockJS for proxies that block native WebSockets
         return new SockJS('/ws/chat');
       },
+      reconnectDelay: 3000,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
       debug: (str) => {
         // console.log('[STOMP Debug]', str);
-      },
-      reconnectDelay: 4000,
-      heartbeatIncoming: 10000,
-      heartbeatOutgoing: 10000
+      }
     });
 
     this.client.onConnect = (frame) => {

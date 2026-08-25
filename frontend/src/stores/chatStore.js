@@ -102,13 +102,39 @@ export const useChatStore = defineStore('chat', {
       }
     },
 
-    sendMessage(content, type = 'TEXT') {
+    async sendMessage(content, type = 'TEXT') {
       if (!content || !content.trim()) return;
+      const cleanContent = content.trim();
 
       if (this.chatType === 'DIRECT' && this.chatTarget) {
-        wsService.sendDirectMessage(this.chatTarget.id, content.trim(), type);
+        const receiverId = this.chatTarget.id;
+        try {
+          // Send via REST API for instant persistence & immediate local update
+          const res = await messageApi.sendDirect({ receiverId, content: cleanContent, type });
+          if (res && res.data) {
+            this.receiveMessage(res.data);
+          }
+        } catch (err) {
+          console.warn('REST API 發送失敗，嘗試透過 WebSocket 發送:', err);
+          const sent = wsService.sendDirectMessage(receiverId, cleanContent, type);
+          if (!sent) {
+            alert('訊息發送失敗，請檢查網路連線');
+          }
+        }
       } else if (this.chatType === 'GROUP' && this.chatTarget) {
-        wsService.sendGroupMessage(this.chatTarget.id, content.trim(), type);
+        const groupId = this.chatTarget.id;
+        try {
+          const res = await messageApi.sendGroup({ groupId, content: cleanContent, type });
+          if (res && res.data) {
+            this.receiveMessage(res.data);
+          }
+        } catch (err) {
+          console.warn('REST API 發送失敗，嘗試透過 WebSocket 發送:', err);
+          const sent = wsService.sendGroupMessage(groupId, cleanContent, type);
+          if (!sent) {
+            alert('訊息發送失敗，請檢查網路連線');
+          }
+        }
       }
     },
 
