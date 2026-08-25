@@ -38,6 +38,10 @@ public class Message {
     @Builder.Default
     private String type = "TEXT"; // TEXT, EMOJI, SYSTEM
 
+    @Column(name = "chat_type", length = 20)
+    @Builder.Default
+    private String chatType = "DIRECT"; // DIRECT, GROUP
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;

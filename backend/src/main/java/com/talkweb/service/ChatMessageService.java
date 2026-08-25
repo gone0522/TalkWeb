@@ -50,6 +50,7 @@ public class ChatMessageService {
                 .receiver(receiver)
                 .content(request.getContent().trim())
                 .type(request.getType() != null ? request.getType() : "TEXT")
+                .chatType("DIRECT")
                 .build();
 
         message = messageRepository.save(message);
@@ -102,6 +103,7 @@ public class ChatMessageService {
                 .group(group)
                 .content(request.getContent().trim())
                 .type(request.getType() != null ? request.getType() : "TEXT")
+                .chatType("GROUP")
                 .build();
 
         message = messageRepository.save(message);

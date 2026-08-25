@@ -45,8 +45,23 @@ CREATE TABLE IF NOT EXISTS chatapp.messages (
     group_id BIGINT REFERENCES chatapp.groups(id) ON DELETE CASCADE,
     content TEXT NOT NULL,
     type VARCHAR(20) DEFAULT 'TEXT',
+    chat_type VARCHAR(20) DEFAULT 'DIRECT',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- 安全遷移相容既有資料庫
+DO $$ 
+BEGIN 
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_schema = 'chatapp' AND table_name = 'messages' AND column_name = 'chat_type'
+    ) THEN 
+        ALTER TABLE chatapp.messages ADD COLUMN chat_type VARCHAR(20) DEFAULT 'DIRECT';
+    ELSE
+        ALTER TABLE chatapp.messages ALTER COLUMN chat_type DROP NOT NULL;
+        ALTER TABLE chatapp.messages ALTER COLUMN chat_type SET DEFAULT 'DIRECT';
+    END IF; 
+END $$;
 
 -- 5. 訊息已讀狀態表 (message_read_status)
 CREATE TABLE IF NOT EXISTS chatapp.message_read_status (
