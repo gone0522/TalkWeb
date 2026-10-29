@@ -1,0 +1,1330 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>再保合約主表維護平台 (UI 模擬畫面) | Reinsurance Treaty Master Maintenance</title>
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans TC', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#3b82f6',
+              600: '#2563eb', // starter-frontend primary
+              700: '#1d4ed8', // starter-frontend primary hover
+              800: '#1e40af',
+            },
+            slate: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              300: '#cbd5e1',
+              400: '#94a3b8',
+              500: '#64748b',
+              600: '#475569',
+              700: '#334155',
+              800: '#1e293b',
+              900: '#0f172a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --text-primary: #0f172a;
+      --text-muted: #64748b;
+      --border-subtle: #e2e8f0;
+      --color-primary: #2563eb;
+      --color-primary-hover: #1d4ed8;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: 'Inter', 'Noto Sans TC', sans-serif;
+    }
+
+    /* Tabular numbers for code alignment */
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Custom smooth transition */
+    .smooth-transition {
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* Tactile button bounce */
+    .btn-tactile:active {
+      transform: scale(0.97);
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Shimmer line for loading */
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .shimmer-line {
+      position: relative;
+      overflow: hidden;
+    }
+    .shimmer-line::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.15), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased">
+
+  <!-- Top Global Navigation Bar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-4">
+        <div class="w-9 h-9 rounded-lg bg-brand-600 flex items-center justify-center text-white shadow-sm font-bold text-lg tracking-wider">
+          <i data-lucide="shield-check" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-slate-900 text-base tracking-tight">再保核心作業平台</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-brand-600 font-semibold border border-blue-200/60 font-mono">SC-0201-01</span>
+          </div>
+          <p class="text-xs text-slate-500">壽險再保策略與分保合約治理核心</p>
+        </div>
+      </div>
+
+      <!-- Header Center Menu Tabs -->
+      <nav class="hidden md:flex items-center space-x-1">
+        <a href="#" class="px-3 py-1.5 text-sm font-semibold text-brand-600 border-b-2 border-brand-600 pb-2">合約主表維護</a>
+        <a href="#" class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">分保計算規則庫</a>
+        <a href="#" class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">分保帳單拋轉</a>
+        <a href="#" class="px-3 py-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors">審計日誌溯源</a>
+      </nav>
+
+      <!-- Right User Controls -->
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          OpenL 引擎連線中
+        </span>
+        <button id="btnToggleTheme" class="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors" title="切換檢視">
+          <i data-lucide="bell" class="w-4 h-4"></i>
+        </button>
+        <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
+          <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-700 font-semibold flex items-center justify-center text-xs">
+            KY
+          </div>
+          <span class="text-sm font-medium text-slate-700 hidden sm:inline">再保主管 Kenny</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- Breadcrumb & Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <div class="flex items-center space-x-2 text-xs text-slate-500 mb-1">
+          <span>首頁</span>
+          <i data-lucide="chevron-right" class="w-3 h-3 text-slate-400"></i>
+          <span>合約主檔治理</span>
+          <i data-lucide="chevron-right" class="w-3 h-3 text-slate-400"></i>
+          <span class="text-slate-800 font-medium">合約主表維護 (Treaty Master)</span>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight flex items-center space-x-2">
+          <span>壽險再保合約主表維護</span>
+          <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-normal border border-slate-200">多版本時序治理</span>
+        </h1>
+      </div>
+
+      <!-- Zone 1: MasterDataHeaderActions (頂部動作列) -->
+      <div class="flex items-center space-x-2.5">
+        <button id="btnExportExcel" class="btn-tactile inline-flex items-center px-3.5 py-2 text-sm font-medium rounded-lg text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm transition-all">
+          <i data-lucide="download" class="w-4 h-4 mr-1.5 text-slate-500"></i>
+          <span>匯出 Excel</span>
+        </button>
+        <button id="btnOpenImportModal" class="btn-tactile inline-flex items-center px-3.5 py-2 text-sm font-medium rounded-lg text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm transition-all">
+          <i data-lucide="file-up" class="w-4 h-4 mr-1.5 text-slate-500"></i>
+          <span>批次匯入</span>
+        </button>
+        <button id="btnOpenCreateModal" class="btn-tactile inline-flex items-center px-4 py-2 text-sm font-semibold rounded-lg text-white bg-brand-600 hover:bg-brand-700 shadow-sm shadow-blue-500/20 transition-all">
+          <i data-lucide="plus" class="w-4 h-4 mr-1.5"></i>
+          <span>新增合約版本</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Zone 2: Search & Filter Card (多維檢索列) -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-5">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Keyword: Contract Code or Version ID -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">合約代碼 / 合約 ID</label>
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+            <input type="text" id="searchInput" placeholder="搜尋如 L0101, DL0101V28..." 
+              class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 font-mono transition-all">
+          </div>
+        </div>
+
+        <!-- Product Code Filter -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">商品代碼快篩</label>
+          <div class="relative">
+            <i data-lucide="tag" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+            <input type="text" id="productInput" placeholder="搜尋如 AWLR, BDL, IPL..." 
+              class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 font-mono transition-all">
+          </div>
+        </div>
+
+        <!-- Reinsurance Type -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">再保方式</label>
+          <select id="typeSelect" class="w-full py-2 px-3 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 transition-all bg-white text-slate-700">
+            <option value="">全部方式 (All Types)</option>
+            <option value="XL">XL - 超額賠款 (Non-Proportional)</option>
+            <option value="PROP">PROP - 比例再保 (Proportional)</option>
+          </select>
+        </div>
+
+        <!-- As-of Date (基準有效日) -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1.5">有效基準日 (ROC 格式)</label>
+          <div class="relative">
+            <i data-lucide="calendar" class="w-4 h-4 absolute left-3 top-2.5 text-slate-400"></i>
+            <input type="text" id="dateInput" placeholder="例: 110/08/01" 
+              class="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-600 font-mono transition-all">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Filter Action Buttons & Status Filter -->
+      <div class="mt-4 pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <!-- Status Radio Pills -->
+        <div class="flex items-center space-x-2 text-xs">
+          <span class="text-slate-500 font-medium mr-1">狀態篩選:</span>
+          <label class="inline-flex items-center px-2.5 py-1 rounded-full cursor-pointer transition-colors bg-slate-100 text-slate-700 font-medium has-[:checked]:bg-brand-600 has-[:checked]:text-white">
+            <input type="radio" name="statusFilter" value="ALL" checked class="hidden"> 全部
+          </label>
+          <label class="inline-flex items-center px-2.5 py-1 rounded-full cursor-pointer transition-colors bg-slate-100 text-slate-700 font-medium has-[:checked]:bg-brand-600 has-[:checked]:text-white">
+            <input type="radio" name="statusFilter" value="ACTIVE" class="hidden"> 僅有效 (ACTIVE)
+          </label>
+          <label class="inline-flex items-center px-2.5 py-1 rounded-full cursor-pointer transition-colors bg-slate-100 text-slate-700 font-medium has-[:checked]:bg-brand-600 has-[:checked]:text-white">
+            <input type="radio" name="statusFilter" value="INACTIVE" class="hidden"> 僅作廢 (INACTIVE)
+          </label>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button id="btnResetFilter" class="btn-tactile px-3 py-1.5 text-xs font-medium rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
+            重設條件
+          </button>
+          <button id="btnApplyFilter" class="btn-tactile px-4 py-1.5 text-xs font-semibold rounded-lg text-white bg-slate-800 hover:bg-slate-900 transition-colors">
+            執行查詢
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Zone 3 & 4: Table Toolbar & Core Data Table (MasterDataTable) -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-h-[460px] flex flex-col justify-between">
+      <div>
+        <!-- Zone 3: Table Toolbar -->
+        <div class="px-5 py-3.5 border-b border-slate-200 bg-slate-50/60 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <span class="text-xs font-semibold text-slate-700">查詢結果</span>
+            <span id="recordCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-brand-700 font-mono font-bold">5 筆</span>
+            <span class="text-xs text-slate-400 hidden sm:inline">| 依版本時序排序 (Temporal Order)</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs text-slate-500">檢視模式:</span>
+            <span class="inline-flex items-center text-xs font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <i data-lucide="check-circle" class="w-3 h-3 mr-1"></i> 時序連續無重疊
+            </span>
+          </div>
+        </div>
+
+        <!-- Shimmer loading bar (hidden by default) -->
+        <div id="loadingBar" class="h-1 bg-brand-500 shimmer-line hidden"></div>
+
+        <!-- Zone 4: Core Data Table -->
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm border-collapse">
+            <thead class="bg-slate-50 text-slate-600 text-xs font-semibold uppercase tracking-wider select-none border-b border-slate-200">
+              <tr>
+                <th class="py-3 px-4 w-12 text-center">序號</th>
+                <th class="py-3 px-4 w-28">合約代碼</th>
+                <th class="py-3 px-4 w-36">合約 ID (版本)</th>
+                <th class="py-3 px-4 w-24">再保方式</th>
+                <th class="py-3 px-4 min-w-[280px]">涵蓋商品代碼 (Product Codes)</th>
+                <th class="py-3 px-4 w-44">版本有效區間 (ROC)</th>
+                <th class="py-3 px-4 w-48">再保計算公式 (保額/保費/佣金)</th>
+                <th class="py-3 px-4 w-20 text-center">狀態</th>
+                <th class="py-3 px-4 w-32 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody id="treatyTableBody" class="divide-y divide-slate-100">
+              <!-- Dynamically rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Zone 5: MasterDataPagination (雙側自適應分頁列) -->
+      <div class="px-5 py-3 border-t border-slate-200 bg-slate-50/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600 select-none">
+        <div class="flex items-center space-x-2">
+          <span>共 <strong id="totalRecordsText" class="font-mono text-slate-900">5</strong> 筆記錄</span>
+          <span class="text-slate-300">|</span>
+          <span>每頁顯示:</span>
+          <select id="pageSizeSelect" class="py-1 px-2 border border-slate-300 rounded bg-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-brand-500">
+            <option value="10">10 筆</option>
+            <option value="20">20 筆</option>
+            <option value="50">50 筆</option>
+          </select>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <button class="px-2.5 py-1 rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>
+          </button>
+          <span class="font-mono px-2">第 1 / 1 頁</span>
+          <button class="px-2.5 py-1 rounded border border-slate-300 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+            <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- Zone 6: Detail Drawer (雙模態檢視/維護抽屜 - RFC-013) -->
+  <!-- ========================================================================= -->
+  <div id="drawerBackdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 hidden transition-opacity opacity-0"></div>
+  <aside id="detailDrawer" class="fixed inset-y-0 right-0 w-full max-w-2xl bg-white shadow-2xl z-50 transform translate-x-full transition-transform duration-250 ease-out flex flex-col">
+    
+    <!-- Drawer Header -->
+    <div class="p-5 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
+      <div>
+        <div class="flex items-center space-x-2">
+          <h2 id="drawerTitle" class="text-lg font-bold text-slate-900 tracking-tight">再保合約詳情</h2>
+          <span id="drawerBadgeMode" class="text-xs px-2 py-0.5 rounded-full font-medium bg-blue-100 text-brand-700">檢視模式</span>
+          <span class="text-xs font-mono text-slate-400">SC-0201-01-03</span>
+        </div>
+        <p class="text-xs text-slate-500 mt-0.5">合約識別碼、涵蓋商品範疇與分保公式詳細規範</p>
+      </div>
+      <div class="flex items-center space-x-2">
+        <button id="btnToggleDrawerMode" class="btn-tactile px-3 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 shadow-xs flex items-center space-x-1">
+          <i data-lucide="edit-3" class="w-3.5 h-3.5 text-brand-600"></i>
+          <span id="btnDrawerModeText">切換為編輯</span>
+        </button>
+        <button id="btnCloseDrawer" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Drawer Navigation Tabs (Modern Underline Tabs) -->
+    <div class="px-5 border-b border-slate-200 flex space-x-6 text-sm">
+      <button id="tabBtnBasic" class="py-3 font-semibold text-brand-600 border-b-2 border-brand-600 flex items-center space-x-1.5">
+        <i data-lucide="file-text" class="w-4 h-4"></i>
+        <span>基本資料與公式</span>
+      </button>
+      <button id="tabBtnAudit" class="py-3 font-medium text-slate-500 hover:text-slate-800 flex items-center space-x-1.5">
+        <i data-lucide="history" class="w-4 h-4"></i>
+        <span>時序異動紀錄 (Audit Trail)</span>
+      </button>
+    </div>
+
+    <!-- Drawer Content Body -->
+    <div class="flex-1 overflow-y-auto p-6 space-y-6">
+      
+      <!-- Tab 1: Basic Info & Formula -->
+      <div id="tabContentBasic" class="space-y-6">
+        
+        <!-- Inspection Mode Card -->
+        <div id="viewModeCard" class="space-y-5">
+          <div class="bg-slate-50/80 rounded-xl p-4 border border-slate-200/80 space-y-4">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">合約核心識別碼</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <span class="text-xs text-slate-400 block mb-0.5">合約代碼 (Contract Code)</span>
+                <span id="vContractCode" class="font-mono font-bold text-slate-900 text-base">L0101</span>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 block mb-0.5">合約 ID (Contract Version ID)</span>
+                <div class="flex items-center space-x-1.5">
+                  <span id="vContractId" class="font-mono font-bold text-brand-600 text-base">DL0101V28</span>
+                  <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-400" title="主鍵唯一鎖定"></i>
+                </div>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 block mb-0.5">再保方式 (Type)</span>
+                <span id="vReinsType" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">XL 超額賠款</span>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 block mb-0.5">當前營運狀態</span>
+                <span id="vStatus" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">有效營運中 (ACTIVE)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Validity Period -->
+          <div class="bg-slate-50/80 rounded-xl p-4 border border-slate-200/80 space-y-3">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">版本時序效期 (Temporal Validity)</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <span class="text-xs text-slate-400 block mb-0.5">版本生效日 (ROC / ISO)</span>
+                <span id="vStartDate" class="font-mono text-slate-900 text-sm font-semibold">110/07/01 (2021-07-01)</span>
+              </div>
+              <div>
+                <span class="text-xs text-slate-400 block mb-0.5">版本終止日 (ROC / ISO)</span>
+                <span id="vEndDate" class="font-mono text-slate-900 text-sm font-semibold">110/12/31 (2021-12-31)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Formula Matrix -->
+          <div class="bg-slate-50/80 rounded-xl p-4 border border-slate-200/80 space-y-3">
+            <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">分保試算公式對應矩陣</h3>
+            <div class="grid grid-cols-2 gap-4">
+              <div class="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+                <span class="text-xs text-slate-400 block mb-1">再保保額計算公式</span>
+                <span id="vCededFormula" class="font-mono text-sm font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded">D001</span>
+                <p class="text-2xs text-slate-400 mt-1">按各保單危險保額扣除自留額標準計算</p>
+              </div>
+              <div class="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+                <span class="text-xs text-slate-400 block mb-1">再保保費計算公式</span>
+                <span id="vPremFormula" class="font-mono text-sm font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">D001001</span>
+                <p class="text-2xs text-slate-400 mt-1">對應再保費率表按年齡性別動態試算</p>
+              </div>
+              <div class="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+                <span class="text-xs text-slate-400 block mb-1">再保佣金計算公式</span>
+                <span id="vCommFormula" class="font-mono text-sm font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">COM</span>
+                <p class="text-2xs text-slate-400 mt-1">標準手續費合約約定拆分比率</p>
+              </div>
+              <div class="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs">
+                <span class="text-xs text-slate-400 block mb-1">再保攤賠計算公式</span>
+                <span id="vClaimFormula" class="font-mono text-sm font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded">未指定 (預設合約攤賠)</span>
+                <p class="text-2xs text-slate-400 mt-1">理賠按實質分保責任比例自動攤分</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Code Wall -->
+          <div class="bg-slate-50/80 rounded-xl p-4 border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider">涵蓋保險商品清單 (Covered Products)</h3>
+              <span id="vProductCountBadge" class="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-mono font-bold">44 項商品</span>
+            </div>
+            <div id="vProductTagsContainer" class="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto p-1 bg-white rounded-lg border border-slate-200">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <!-- Reference Defense Damper Card (引用防護資訊卡 - RFC-015) -->
+          <div class="bg-amber-50/80 border border-amber-200/80 rounded-xl p-4 flex items-start space-x-3">
+            <i data-lucide="shield-alert" class="w-5 h-5 text-amber-600 mt-0.5 shrink-0"></i>
+            <div class="text-xs">
+              <h4 class="font-bold text-amber-900">企業級引用防護網生效中 (Reference Defense Active)</h4>
+              <p class="text-amber-800 mt-0.5 leading-relaxed">
+                該版本目前已被 <strong id="vRefCount" class="font-mono underline">1,428</strong> 筆有效分保帳單、理賠備案或試算單引用。依據金融合規與審計法規，<strong>嚴格禁止物理刪除</strong>；若需終止業務，請使用「設為作廢」或「升版改約」。
+              </p>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Manipulation Form (Hidden by default) -->
+        <form id="editModeForm" class="space-y-4 hidden">
+          <div class="bg-blue-50/50 p-3 rounded-lg border border-blue-200 text-xs text-brand-800">
+            <strong>正在進行版本維護：</strong> 系統支援欄位即時校驗，核心主鍵合約 ID 依法鎖定不可竄改。
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">合約代碼</label>
+              <input type="text" id="editContractCode" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono bg-slate-100 cursor-not-allowed" readonly>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">合約 ID (版本唯一主鍵)</label>
+              <input type="text" id="editContractId" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono bg-slate-100 cursor-not-allowed" readonly>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">版本生效日 (ROC)</label>
+              <input type="text" id="editStartDate" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono focus:ring-2 focus:ring-brand-500">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">版本終止日 (ROC)</label>
+              <input type="text" id="editEndDate" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono focus:ring-2 focus:ring-brand-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">再保方式</label>
+              <select id="editReinsType" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white">
+                <option value="XL">XL - 超額賠款</option>
+                <option value="PROP">PROP - 比例再保</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">狀態</label>
+              <select id="editStatus" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white">
+                <option value="ACTIVE">有效 (ACTIVE)</option>
+                <option value="INACTIVE">作廢 (INACTIVE)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">保額計算公式代碼</label>
+              <input type="text" id="editCededFormula" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">保費計算公式代碼</label>
+              <input type="text" id="editPremFormula" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">涵蓋商品代碼 (以逗點隔開)</label>
+            <textarea id="editProducts" rows="4" class="w-full p-2.5 text-xs rounded-lg border border-slate-300 font-mono leading-relaxed focus:ring-2 focus:ring-brand-500"></textarea>
+          </div>
+
+          <!-- Audit Reason (Required for edit) -->
+          <div class="p-3 bg-amber-50/60 rounded-lg border border-amber-200">
+            <label class="block text-xs font-bold text-amber-900 mb-1">異動原因備註 (必填，稽核要求) <span class="text-red-500">*</span></label>
+            <input type="text" id="editReason" placeholder="例: 依照 111 年度再保合約修訂附約商品代碼..." class="w-full px-3 py-1.5 text-xs rounded border border-amber-300 focus:outline-none focus:ring-1 focus:ring-amber-500">
+          </div>
+
+          <div class="flex items-center justify-end space-x-2 pt-2">
+            <button type="button" id="btnCancelEdit" class="px-4 py-2 text-xs font-medium rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50">取消</button>
+            <button type="button" id="btnSaveEdit" class="px-4 py-2 text-xs font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-700 shadow-sm">儲存異動</button>
+          </div>
+        </form>
+
+      </div>
+
+      <!-- Tab 2: Audit Trail Log -->
+      <div id="tabContentAudit" class="space-y-4 hidden">
+        <div class="text-xs text-slate-500 flex items-center justify-between">
+          <span>不可篡改全生命週期變更軌跡</span>
+          <span class="font-mono">共 3 筆歷程</span>
+        </div>
+        <div class="border border-slate-200 rounded-lg overflow-hidden">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+              <tr>
+                <th class="p-2.5">時間戳記</th>
+                <th class="p-2.5">操作人</th>
+                <th class="p-2.5">變更欄位</th>
+                <th class="p-2.5">異動前後</th>
+                <th class="p-2.5">變更理由</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 font-mono">
+              <tr>
+                <td class="p-2.5 text-slate-600">111/01/01 09:30</td>
+                <td class="p-2.5 text-slate-800 font-sans">再保精算部 - 李科長</td>
+                <td class="p-2.5 text-blue-600">版本升版 (Roll-out)</td>
+                <td class="p-2.5">
+                  <span class="text-red-500 line-through">DL0101V28</span> ➔ <strong class="text-emerald-600">DL0101V29</strong>
+                </td>
+                <td class="p-2.5 text-slate-600 font-sans">111年度合約續約升版</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 text-slate-600">110/06/28 14:15</td>
+                <td class="p-2.5 text-slate-800 font-sans">再保核保部 - 王專員</td>
+                <td class="p-2.5 text-slate-700">商品代碼清單</td>
+                <td class="p-2.5">新增商品 <code>FS, FZ, TLE</code></td>
+                <td class="p-2.5 text-slate-600 font-sans">新商品上市納入再保合約分保</td>
+              </tr>
+              <tr>
+                <td class="p-2.5 text-slate-600">109/12/20 11:00</td>
+                <td class="p-2.5 text-slate-800 font-sans">系統管理員 - Kenny</td>
+                <td class="p-2.5 text-slate-700">初始建立</td>
+                <td class="p-2.5 text-emerald-600">初始版本入庫</td>
+                <td class="p-2.5 text-slate-600 font-sans">合約初始化上線</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Drawer Footer Actions -->
+    <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+      <button id="btnDeleteContract" class="btn-tactile px-3.5 py-1.5 text-xs font-semibold rounded-lg text-red-600 bg-red-50 border border-red-200 hover:bg-red-100 transition-colors flex items-center space-x-1">
+        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+        <span>刪除此版本</span>
+      </button>
+      <div class="flex items-center space-x-2">
+        <button id="btnDrawerCloseFooter" class="px-4 py-1.5 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50">關閉</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================= -->
+  <!-- Modal 1: Create / Roll-out Modal (新增 / 升版彈窗) -->
+  <!-- ========================================================================= -->
+  <div id="createModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="px-5 py-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">新增再保合約版本</h3>
+          <p class="text-xs text-slate-500">支援全新合約建立或既有合約升版連續性維護</p>
+        </div>
+        <button id="btnCloseCreateModal" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+        
+        <!-- Mode Switch: Greenfield vs Roll-out -->
+        <div class="p-1 bg-slate-100 rounded-lg flex text-xs font-semibold">
+          <button id="btnModeGreenfield" class="flex-1 py-1.5 rounded-md bg-white text-slate-900 shadow-2xs">全新合約建立 (Greenfield)</button>
+          <button id="btnModeRollout" class="flex-1 py-1.5 rounded-md text-slate-500 hover:text-slate-800">既有合約升版 (Version Roll-out)</button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">合約代碼 <span class="text-red-500">*</span></label>
+            <input type="text" id="newContractCode" placeholder="例: L0101, L2001" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono focus:ring-2 focus:ring-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">合約 ID (自動推算)</label>
+            <input type="text" id="newContractId" placeholder="自動生成如 DL2001V01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono bg-slate-50" readonly>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">版本生效日 (ROC) <span class="text-red-500">*</span></label>
+            <input type="text" id="newStartDate" placeholder="例: 111/01/01" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono focus:ring-2 focus:ring-brand-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">版本終止日 (ROC) <span class="text-red-500">*</span></label>
+            <input type="text" id="newEndDate" value="999/12/31" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono focus:ring-2 focus:ring-brand-500">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">再保方式 <span class="text-red-500">*</span></label>
+            <select id="newReinsType" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 bg-white">
+              <option value="XL">XL - 超額賠款 (Non-Proportional)</option>
+              <option value="PROP">PROP - 比例再保 (Proportional)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">再保佣金計算公式</label>
+            <input type="text" id="newCommFormula" value="COM" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">再保保額計算公式 <span class="text-red-500">*</span></label>
+            <input type="text" id="newCededFormula" placeholder="例: D001, E001" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">再保保費計算公式 <span class="text-red-500">*</span></label>
+            <input type="text" id="newPremFormula" placeholder="例: D001001, E001001" class="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 font-mono">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">涵蓋保險商品代碼 (以逗點分開) <span class="text-red-500">*</span></label>
+          <textarea id="newProducts" rows="3" placeholder="例: AWLR, EP, FB, FD, FED, FWL..." class="w-full p-2.5 text-xs rounded-lg border border-slate-300 font-mono"></textarea>
+        </div>
+
+      </div>
+
+      <div class="px-5 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+        <button id="btnCancelCreate" class="px-4 py-2 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50">取消</button>
+        <div class="flex items-center space-x-2">
+          <button id="btnSaveAndContinue" class="px-4 py-2 text-xs font-semibold rounded-lg border border-brand-600 text-brand-600 hover:bg-brand-50">儲存並繼續新增</button>
+          <button id="btnConfirmCreate" class="btn-tactile px-5 py-2 text-xs font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-700 shadow-sm">確認建立</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- Modal 2: Batch Excel Import Modal (批次匯入三步向導 - RFC-011) -->
+  <!-- ========================================================================= -->
+  <div id="importModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      <div class="px-5 py-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">批次匯入再保合約主表 (Excel Import)</h3>
+          <p class="text-xs text-slate-500">支援民國年格式轉換、商品代碼清單校驗與版本防重疊檢測</p>
+        </div>
+        <button id="btnCloseImportModal" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-6">
+        
+        <!-- Step Indicators -->
+        <div class="flex items-center justify-between text-xs px-4">
+          <div class="flex items-center space-x-2 text-brand-600 font-bold">
+            <span class="w-6 h-6 rounded-full bg-brand-600 text-white flex items-center justify-center text-2xs">1</span>
+            <span>下載範本</span>
+          </div>
+          <div class="h-0.5 flex-1 mx-3 bg-slate-200"></div>
+          <div class="flex items-center space-x-2 text-slate-600 font-semibold">
+            <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center text-2xs">2</span>
+            <span>上傳校驗</span>
+          </div>
+          <div class="h-0.5 flex-1 mx-3 bg-slate-200"></div>
+          <div class="flex items-center space-x-2 text-slate-400">
+            <span class="w-6 h-6 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center text-2xs">3</span>
+            <span>預覽入庫</span>
+          </div>
+        </div>
+
+        <!-- Step 1: Download Sample -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center justify-between">
+          <div>
+            <h4 class="text-sm font-semibold text-slate-800">標準合約匯入範本 (.xlsx)</h4>
+            <p class="text-xs text-slate-500 mt-0.5">內建民國年欄位提示、再保方式下拉限制與商品代碼格式指引</p>
+          </div>
+          <button id="btnDownloadTemplate" class="px-3.5 py-1.5 text-xs font-semibold rounded-lg bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 flex items-center space-x-1.5 shadow-2xs">
+            <i data-lucide="file-spreadsheet" class="w-4 h-4 text-emerald-600"></i>
+            <span>下載範本</span>
+          </button>
+        </div>
+
+        <!-- Step 2: Drag & Drop Zone -->
+        <div class="border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-xl p-8 text-center transition-colors cursor-pointer bg-slate-50/50 hover:bg-blue-50/20 group">
+          <div class="w-12 h-12 rounded-full bg-blue-50 group-hover:bg-blue-100 text-brand-600 mx-auto flex items-center justify-center mb-3 transition-colors">
+            <i data-lucide="upload-cloud" class="w-6 h-6"></i>
+          </div>
+          <span class="text-sm font-semibold text-slate-800 block">拖曳 Excel 檔案至此，或點擊選取檔案</span>
+          <span class="text-xs text-slate-400 mt-1 block">支援 .xlsx, .xls 格式，最大 10MB</span>
+        </div>
+
+        <!-- Simulation Preview Box -->
+        <div class="p-3 bg-emerald-50/80 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600"></i>
+            <span>已成功模擬預載 5 筆合約主檔範本資料 (零格式錯誤)</span>
+          </div>
+          <span class="font-mono font-bold">100% 格式合法</span>
+        </div>
+
+      </div>
+
+      <div class="px-5 py-3.5 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+        <button id="btnCancelImport" class="px-4 py-2 text-xs font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-50">關閉</button>
+        <button id="btnConfirmImport" class="btn-tactile px-5 py-2 text-xs font-semibold rounded-lg bg-brand-600 text-white hover:bg-brand-700 shadow-sm">
+          執行批次入庫
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Popover for Expanded Product Codes -->
+  <div id="productPopover" class="fixed bg-white rounded-xl shadow-xl border border-slate-200 p-4 z-50 max-w-md hidden animate-in fade-in duration-100">
+    <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100">
+      <div class="flex items-center space-x-1.5">
+        <span id="popoverTitle" class="text-xs font-bold text-slate-800">商品代碼清單</span>
+        <span id="popoverCount" class="text-2xs px-1.5 py-0.5 rounded bg-blue-100 text-brand-700 font-mono font-bold">44</span>
+      </div>
+      <button id="btnClosePopover" class="text-slate-400 hover:text-slate-600">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+    </div>
+    <div id="popoverContent" class="flex flex-wrap gap-1 max-h-48 overflow-y-auto p-1 font-mono text-2xs">
+      <!-- Injected -->
+    </div>
+  </div>
+
+  <!-- Sonner-style Toast Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+  <!-- ========================================================================= -->
+  <!-- JavaScript Application Logic -->
+  <!-- ========================================================================= -->
+  <script>
+    // 1. Initial State Data (Exact user provided dataset)
+    const initialTreaties = [
+      {
+        id: "DL0101V27",
+        contractCode: "L0101",
+        versionId: "DL0101V27",
+        productCodes: "AWLR,EP,FB,FD,FED,FWL,FY,IWLR,LWL,NIWLR,SED,STLR,STR,TL,TLR,TR,WL,WLR,WLS,DT,ED,AWL,FG,IPLD,STL,YWL,FWLS,IPL,IWL,IWLN,LWLS,SWL,FIP,FL,JWL,SFWL,GLE,SAWL,SAWLR,FS,FZ,TLE,SJ,HWL",
+        startDateROC: "110/01/01",
+        endDateROC: "110/06/30",
+        startDateISO: "2021-01-01",
+        endDateISO: "2021-06-30",
+        reinsType: "XL",
+        cededFormula: "D001",
+        premFormula: "D001001",
+        commFormula: "COM",
+        claimFormula: "",
+        status: "ACTIVE",
+        refCount: 842
+      },
+      {
+        id: "DL0101V28",
+        contractCode: "L0101",
+        versionId: "DL0101V28",
+        productCodes: "AWLR,EP,FB,FD,FED,FWL,FY,IWLR,LWL,NIWLR,SED,STLR,STR,TL,TLR,TR,WL,WLR,WLS,DT,ED,AWL,FG,IPLD,STL,YWL,FWLS,IPL,IWL,IWLN,LWLS,SWL,FIP,FL,JWL,SFWL,GLE,SAWL,SAWLR,FS,FZ,TLE,SJ,HWL",
+        startDateROC: "110/07/01",
+        endDateROC: "110/12/31",
+        startDateISO: "2021-07-01",
+        endDateISO: "2021-12-31",
+        reinsType: "XL",
+        cededFormula: "D001",
+        premFormula: "D001001",
+        commFormula: "COM",
+        claimFormula: "",
+        status: "ACTIVE",
+        refCount: 1428
+      },
+      {
+        id: "DL0101V29",
+        contractCode: "L0101",
+        versionId: "DL0101V29",
+        productCodes: "AWLR,EP,FB,FD,FED,FWL,FY,IWLR,LWL,NIWLR,SED,STLR,STR,TL,TLR,TR,WL,WLR,WLS,DT,ED,AWL,FG,IPLD,STL,YWL,FWLS,IPL,IWL,IWLN,LWLS,SWL,FIP,FL,JWL,SFWL,GLE,SAWL,SAWLR,FS,FZ,TLE,SJ,HWL",
+        startDateROC: "111/01/01",
+        endDateROC: "999/12/31",
+        startDateISO: "2022-01-01",
+        endDateISO: "3110-12-31",
+        reinsType: "XL",
+        cededFormula: "D001",
+        premFormula: "D001001",
+        commFormula: "COM",
+        claimFormula: "",
+        status: "ACTIVE",
+        refCount: 3950
+      },
+      {
+        id: "EL1001V01",
+        contractCode: "L1001",
+        versionId: "EL1001V01",
+        productCodes: "BDL,NZBL,ZBL,MKL",
+        startDateROC: "108/04/19",
+        endDateROC: "110/06/30",
+        startDateISO: "2019-04-19",
+        endDateISO: "2021-06-30",
+        reinsType: "PROP",
+        cededFormula: "E001",
+        premFormula: "E001001",
+        commFormula: "COM",
+        claimFormula: "",
+        status: "ACTIVE",
+        refCount: 512
+      },
+      {
+        id: "EL1001V02",
+        contractCode: "L1001",
+        versionId: "EL1001V02",
+        productCodes: "BDL,NZBL,ZBL,MKL",
+        startDateROC: "110/07/01",
+        endDateROC: "999/12/31",
+        startDateISO: "2021-07-01",
+        endDateISO: "3110-12-31",
+        reinsType: "PROP",
+        cededFormula: "E001",
+        premFormula: "E001001",
+        commFormula: "COM",
+        claimFormula: "",
+        status: "ACTIVE",
+        refCount: 1840
+      }
+    ];
+
+    let treaties = [...initialTreaties];
+    let selectedTreaty = null;
+    let isEditMode = false;
+
+    // Toast function
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `pointer-events-auto flex items-center space-x-2 px-4 py-3 rounded-xl shadow-lg border text-sm font-medium transition-all transform duration-200 translate-y-2 opacity-0 ${
+        type === 'success' ? 'bg-white border-emerald-200 text-slate-800' : 'bg-white border-red-200 text-slate-800'
+      }`;
+
+      const iconName = type === 'success' ? 'check-circle' : 'alert-circle';
+      const iconColor = type === 'success' ? 'text-emerald-500' : 'text-red-500';
+
+      toast.innerHTML = `
+        <i data-lucide="${iconName}" class="w-4 h-4 ${iconColor}"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 250);
+      }, 3200);
+    }
+
+    // Render Table
+    function renderTable() {
+      const tbody = document.getElementById('treatyTableBody');
+      const searchKeyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      const productKeyword = document.getElementById('productInput').value.trim().toUpperCase();
+      const typeFilter = document.getElementById('typeSelect').value;
+      const statusFilter = document.querySelector('input[name="statusFilter"]:checked')?.value || 'ALL';
+
+      const filtered = treaties.filter(t => {
+        const matchCode = !searchKeyword || t.contractCode.toLowerCase().includes(searchKeyword) || t.versionId.toLowerCase().includes(searchKeyword);
+        const matchProd = !productKeyword || t.productCodes.includes(productKeyword);
+        const matchType = !typeFilter || t.reinsType === typeFilter;
+        const matchStatus = statusFilter === 'ALL' || t.status === statusFilter;
+        return matchCode && matchProd && matchType && matchStatus;
+      });
+
+      document.getElementById('recordCountBadge').innerText = `${filtered.length} 筆`;
+      document.getElementById('totalRecordsText').innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="9" class="py-12 text-center text-slate-400">
+              <i data-lucide="folder-search" class="w-8 h-8 mx-auto mb-2 text-slate-300"></i>
+              <p class="text-sm">查無符合條件的再保合約版本</p>
+              <button onclick="resetFilters()" class="mt-2 text-xs text-brand-600 hover:underline">清除篩選條件</button>
+            </td>
+          </tr>
+        `;
+        lucide.createIcons();
+        return;
+      }
+
+      tbody.innerHTML = filtered.map((t, index) => {
+        const prodList = t.productCodes.split(',');
+        const firstFewProds = prodList.slice(0, 3);
+        const remainingCount = prodList.length - firstFewProds.length;
+
+        const isXL = t.reinsType === 'XL';
+        const typeBadge = isXL 
+          ? `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">XL</span>`
+          : `<span class="px-2 py-0.5 rounded text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">PROP</span>`;
+
+        const isLatest = t.endDateROC === '999/12/31';
+        const dateBadge = isLatest
+          ? `<span class="font-mono text-xs text-slate-900 font-semibold">${t.startDateROC} ~ <span class="text-brand-600 font-bold bg-blue-50 px-1 py-0.5 rounded border border-blue-200">999/12/31 (最新版)</span></span>`
+          : `<span class="font-mono text-xs text-slate-600">${t.startDateROC} ~ ${t.endDateROC}</span>`;
+
+        const statusPill = t.status === 'ACTIVE'
+          ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">有效</span>`
+          : `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-2xs font-semibold bg-slate-100 text-slate-500 border border-slate-200">作廢</span>`;
+
+        const rowInactiveClass = t.status === 'INACTIVE' ? 'opacity-65 bg-slate-50/50' : 'hover:bg-slate-50/80';
+
+        return `
+          <tr class="transition-colors border-b border-slate-100 cursor-pointer ${rowInactiveClass}" onclick="openDetailDrawer('${t.id}')">
+            <td class="py-3 px-4 text-center font-mono text-xs text-slate-400 select-none">${index + 1}</td>
+            <td class="py-3 px-4 font-mono font-bold text-slate-900 text-sm">${t.contractCode}</td>
+            <td class="py-3 px-4 font-mono font-semibold text-brand-700 text-xs">${t.versionId}</td>
+            <td class="py-3 px-4">${typeBadge}</td>
+            <td class="py-3 px-4" onclick="event.stopPropagation()">
+              <div class="flex items-center flex-wrap gap-1">
+                ${firstFewProds.map(p => `<span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 font-mono text-2xs border border-slate-200">${p}</span>`).join('')}
+                ${remainingCount > 0 ? `
+                  <button onclick="showProductPopover(event, '${t.id}')" class="px-1.5 py-0.5 rounded bg-blue-50 hover:bg-blue-100 text-brand-700 font-mono text-2xs border border-blue-200 transition-colors font-semibold">
+                    +${remainingCount} 項...
+                  </button>
+                ` : ''}
+              </div>
+            </td>
+            <td class="py-3 px-4">${dateBadge}</td>
+            <td class="py-3 px-4">
+              <div class="font-mono text-xs flex items-center space-x-1.5">
+                <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold" title="再保保額公式">${t.cededFormula}</span>
+                <span class="text-slate-300">/</span>
+                <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold" title="再保保費公式">${t.premFormula}</span>
+                <span class="text-slate-300">/</span>
+                <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700" title="再保佣金公式">${t.commFormula || '-'}</span>
+              </div>
+            </td>
+            <td class="py-3 px-4 text-center">${statusPill}</td>
+            <td class="py-3 px-4 text-right" onclick="event.stopPropagation()">
+              <div class="flex items-center justify-end space-x-1">
+                <button onclick="openDetailDrawer('${t.id}')" class="px-2.5 py-1 text-xs font-semibold rounded text-brand-600 hover:bg-blue-50 transition-colors">
+                  檢視
+                </button>
+                <button onclick="openRolloutModal('${t.id}')" class="px-2 py-1 text-xs font-medium rounded text-slate-600 hover:bg-slate-100 transition-colors" title="既有合約升版">
+                  升版
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      lucide.createIcons();
+    }
+
+    // Product Popover
+    function showProductPopover(e, treatyId) {
+      const treaty = treaties.find(t => t.id === treatyId);
+      if (!treaty) return;
+
+      const popover = document.getElementById('productPopover');
+      const content = document.getElementById('popoverContent');
+      const title = document.getElementById('popoverTitle');
+      const count = document.getElementById('popoverCount');
+
+      title.innerText = `${treaty.contractCode} (${treaty.versionId}) 涵蓋商品`;
+      const prods = treaty.productCodes.split(',');
+      count.innerText = prods.length;
+
+      content.innerHTML = prods.map(p => `
+        <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200">${p}</span>
+      `).join('');
+
+      const rect = e.target.getBoundingClientRect();
+      popover.style.top = `${rect.bottom + window.scrollY + 6}px`;
+      popover.style.left = `${Math.min(rect.left, window.innerWidth - 380)}px`;
+      popover.classList.remove('hidden');
+    }
+
+    document.getElementById('btnClosePopover').addEventListener('click', () => {
+      document.getElementById('productPopover').classList.add('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      const popover = document.getElementById('productPopover');
+      if (!popover.classList.contains('hidden') && !popover.contains(e.target)) {
+        popover.classList.add('hidden');
+      }
+    });
+
+    // Drawer Management
+    function openDetailDrawer(treatyId) {
+      selectedTreaty = treaties.find(t => t.id === treatyId);
+      if (!selectedTreaty) return;
+
+      isEditMode = false;
+      updateDrawerUI();
+
+      const drawer = document.getElementById('detailDrawer');
+      const backdrop = document.getElementById('drawerBackdrop');
+
+      backdrop.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        backdrop.classList.add('opacity-100');
+        drawer.classList.remove('translate-x-full');
+      });
+    }
+
+    function closeDetailDrawer() {
+      const drawer = document.getElementById('detailDrawer');
+      const backdrop = document.getElementById('drawerBackdrop');
+
+      drawer.classList.add('translate-x-full');
+      backdrop.classList.remove('opacity-100');
+      setTimeout(() => backdrop.classList.add('hidden'), 250);
+    }
+
+    function updateDrawerUI() {
+      if (!selectedTreaty) return;
+
+      document.getElementById('drawerTitle').innerText = `${selectedTreaty.contractCode} 合約版本詳情`;
+      document.getElementById('vContractCode').innerText = selectedTreaty.contractCode;
+      document.getElementById('vContractId').innerText = selectedTreaty.versionId;
+      document.getElementById('vReinsType').innerText = selectedTreaty.reinsType === 'XL' ? 'XL 超額賠款 (Non-Prop)' : 'PROP 比例再保 (Prop)';
+      document.getElementById('vStatus').innerText = selectedTreaty.status === 'ACTIVE' ? '有效營運中 (ACTIVE)' : '已作廢 (INACTIVE)';
+
+      document.getElementById('vStartDate').innerText = `${selectedTreaty.startDateROC} (${selectedTreaty.startDateISO})`;
+      document.getElementById('vEndDate').innerText = `${selectedTreaty.endDateROC} (${selectedTreaty.endDateISO})`;
+
+      document.getElementById('vCededFormula').innerText = selectedTreaty.cededFormula;
+      document.getElementById('vPremFormula').innerText = selectedTreaty.premFormula;
+      document.getElementById('vCommFormula').innerText = selectedTreaty.commFormula || 'COM';
+      document.getElementById('vClaimFormula').innerText = selectedTreaty.claimFormula || '未指定 (依預設規則)';
+
+      const prodList = selectedTreaty.productCodes.split(',');
+      document.getElementById('vProductCountBadge').innerText = `${prodList.length} 項商品`;
+      document.getElementById('vProductTagsContainer').innerHTML = prodList.map(p => `
+        <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-800 font-mono text-2xs border border-slate-200">${p}</span>
+      `).join('');
+
+      document.getElementById('vRefCount').innerText = selectedTreaty.refCount.toLocaleString();
+
+      // Form bindings
+      document.getElementById('editContractCode').value = selectedTreaty.contractCode;
+      document.getElementById('editContractId').value = selectedTreaty.versionId;
+      document.getElementById('editStartDate').value = selectedTreaty.startDateROC;
+      document.getElementById('editEndDate').value = selectedTreaty.endDateROC;
+      document.getElementById('editReinsType').value = selectedTreaty.reinsType;
+      document.getElementById('editStatus').value = selectedTreaty.status;
+      document.getElementById('editCededFormula').value = selectedTreaty.cededFormula;
+      document.getElementById('editPremFormula').value = selectedTreaty.premFormula;
+      document.getElementById('editProducts').value = selectedTreaty.productCodes;
+
+      // View vs Edit Toggle
+      const viewCard = document.getElementById('viewModeCard');
+      const editForm = document.getElementById('editModeForm');
+      const badgeMode = document.getElementById('drawerBadgeMode');
+      const btnModeText = document.getElementById('btnDrawerModeText');
+
+      if (isEditMode) {
+        viewCard.classList.add('hidden');
+        editForm.classList.remove('hidden');
+        badgeMode.innerText = '編輯模式';
+        badgeMode.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-amber-100 text-amber-800';
+        btnModeText.innerText = '返回檢視';
+      } else {
+        viewCard.classList.remove('hidden');
+        editForm.classList.add('hidden');
+        badgeMode.innerText = '檢視模式';
+        badgeMode.className = 'text-xs px-2 py-0.5 rounded-full font-medium bg-blue-100 text-brand-700';
+        btnModeText.innerText = '切換為編輯';
+      }
+
+      lucide.createIcons();
+    }
+
+    document.getElementById('btnToggleDrawerMode').addEventListener('click', () => {
+      isEditMode = !isEditMode;
+      updateDrawerUI();
+    });
+
+    document.getElementById('btnCancelEdit').addEventListener('click', () => {
+      isEditMode = false;
+      updateDrawerUI();
+    });
+
+    document.getElementById('btnSaveEdit').addEventListener('click', () => {
+      const reason = document.getElementById('editReason').value.trim();
+      if (!reason) {
+        alert('依審計法規要求，修改合約計算與生效起訖欄位必須填寫「異動原因備註」！');
+        document.getElementById('editReason').focus();
+        return;
+      }
+
+      selectedTreaty.startDateROC = document.getElementById('editStartDate').value.trim();
+      selectedTreaty.endDateROC = document.getElementById('editEndDate').value.trim();
+      selectedTreaty.reinsType = document.getElementById('editReinsType').value;
+      selectedTreaty.status = document.getElementById('editStatus').value;
+      selectedTreaty.cededFormula = document.getElementById('editCededFormula').value.trim();
+      selectedTreaty.premFormula = document.getElementById('editPremFormula').value.trim();
+      selectedTreaty.productCodes = document.getElementById('editProducts').value.trim();
+
+      isEditMode = false;
+      updateDrawerUI();
+      renderTable();
+      showToast('合約版本屬性已更新，異動已寫入審計追蹤！');
+    });
+
+    // Delete check with Reference Defense
+    document.getElementById('btnDeleteContract').addEventListener('click', () => {
+      if (!selectedTreaty) return;
+      if (selectedTreaty.refCount > 0) {
+        alert(`【引用防護阻擋】該合約版本已有 ${selectedTreaty.refCount} 筆保單或分保帳單引用，依法嚴格禁止物理刪除！\n\n建議：請在編輯模式中將狀態改為「作廢 (INACTIVE)」。`);
+        return;
+      }
+      if (confirm(`確定要物理刪除合約版本 ${selectedTreaty.versionId} 嗎？此操作不可逆！`)) {
+        treaties = treaties.filter(t => t.id !== selectedTreaty.id);
+        closeDetailDrawer();
+        renderTable();
+        showToast('合約草稿版本已刪除', 'error');
+      }
+    });
+
+    document.getElementById('btnCloseDrawer').addEventListener('click', closeDetailDrawer);
+    document.getElementById('btnDrawerCloseFooter').addEventListener('click', closeDetailDrawer);
+    document.getElementById('drawerBackdrop').addEventListener('click', closeDetailDrawer);
+
+    // Tab switching inside drawer
+    document.getElementById('tabBtnBasic').addEventListener('click', () => {
+      document.getElementById('tabContentBasic').classList.remove('hidden');
+      document.getElementById('tabContentAudit').classList.add('hidden');
+      document.getElementById('tabBtnBasic').className = 'py-3 font-semibold text-brand-600 border-b-2 border-brand-600 flex items-center space-x-1.5';
+      document.getElementById('tabBtnAudit').className = 'py-3 font-medium text-slate-500 hover:text-slate-800 flex items-center space-x-1.5';
+    });
+
+    document.getElementById('tabBtnAudit').addEventListener('click', () => {
+      document.getElementById('tabContentBasic').classList.add('hidden');
+      document.getElementById('tabContentAudit').classList.remove('hidden');
+      document.getElementById('tabBtnAudit').className = 'py-3 font-semibold text-brand-600 border-b-2 border-brand-600 flex items-center space-x-1.5';
+      document.getElementById('tabBtnBasic').className = 'py-3 font-medium text-slate-500 hover:text-slate-800 flex items-center space-x-1.5';
+    });
+
+    // Create Modal Logic
+    const createModal = document.getElementById('createModal');
+    document.getElementById('btnOpenCreateModal').addEventListener('click', () => {
+      document.getElementById('newContractCode').value = '';
+      document.getElementById('newContractId').value = '';
+      document.getElementById('newStartDate').value = '112/01/01';
+      document.getElementById('newEndDate').value = '999/12/31';
+      document.getElementById('newCededFormula').value = '';
+      document.getElementById('newPremFormula').value = '';
+      document.getElementById('newProducts').value = '';
+      createModal.classList.remove('hidden');
+    });
+
+    function openRolloutModal(treatyId) {
+      const src = treaties.find(t => t.id === treatyId);
+      if (!src) return;
+
+      document.getElementById('newContractCode').value = src.contractCode;
+      document.getElementById('newContractId').value = src.contractCode + 'V' + (parseInt(src.versionId.slice(-2)) + 1).toString().padStart(2, '0');
+      document.getElementById('newStartDate').value = '112/01/01';
+      document.getElementById('newEndDate').value = '999/12/31';
+      document.getElementById('newReinsType').value = src.reinsType;
+      document.getElementById('newCededFormula').value = src.cededFormula;
+      document.getElementById('newPremFormula').value = src.premFormula;
+      document.getElementById('newProducts').value = src.productCodes;
+      createModal.classList.remove('hidden');
+    }
+
+    document.getElementById('btnCloseCreateModal').addEventListener('click', () => createModal.classList.add('hidden'));
+    document.getElementById('btnCancelCreate').addEventListener('click', () => createModal.classList.add('hidden'));
+
+    document.getElementById('btnConfirmCreate').addEventListener('click', () => {
+      const code = document.getElementById('newContractCode').value.trim();
+      const start = document.getElementById('newStartDate').value.trim();
+      const end = document.getElementById('newEndDate').value.trim();
+      const type = document.getElementById('newReinsType').value;
+      const ceded = document.getElementById('newCededFormula').value.trim();
+      const prem = document.getElementById('newPremFormula').value.trim();
+      const prods = document.getElementById('newProducts').value.trim();
+
+      if (!code || !start || !end || !ceded || !prem || !prods) {
+        alert('請完整填寫合約代碼、生效起訖日、計算公式與適用商品代碼！');
+        return;
+      }
+
+      const versionId = 'D' + code + 'V' + (treaties.filter(t => t.contractCode === code).length + 1).toString().padStart(2, '0');
+
+      treaties.unshift({
+        id: versionId,
+        contractCode: code,
+        versionId: versionId,
+        productCodes: prods,
+        startDateROC: start,
+        endDateROC: end,
+        startDateISO: '2023-01-01',
+        endDateISO: '3110-12-31',
+        reinsType: type,
+        cededFormula: ceded,
+        premFormula: prem,
+        commFormula: 'COM',
+        claimFormula: '',
+        status: 'ACTIVE',
+        refCount: 0
+      });
+
+      createModal.classList.add('hidden');
+      renderTable();
+      showToast(`成功建立全新合約版本：${versionId}`);
+    });
+
+    // Import Modal Logic
+    const importModal = document.getElementById('importModal');
+    document.getElementById('btnOpenImportModal').addEventListener('click', () => importModal.classList.remove('hidden'));
+    document.getElementById('btnCloseImportModal').addEventListener('click', () => importModal.classList.add('hidden'));
+    document.getElementById('btnCancelImport').addEventListener('click', () => importModal.classList.add('hidden'));
+
+    document.getElementById('btnConfirmImport').addEventListener('click', () => {
+      importModal.classList.add('hidden');
+      showToast('批次匯入完成：成功寫入 5 筆合約主檔與時序版本！');
+    });
+
+    document.getElementById('btnDownloadTemplate').addEventListener('click', () => {
+      showToast('標準合約主表匯入範本 (Treaty_Master_Template.xlsx) 下載中...');
+    });
+
+    // Export Excel Logic
+    document.getElementById('btnExportExcel').addEventListener('click', () => {
+      const btn = document.getElementById('btnExportExcel');
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 mr-1.5 animate-spin text-brand-600"></i><span>匯出中...</span>`;
+      lucide.createIcons();
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<i data-lucide="download" class="w-4 h-4 mr-1.5 text-slate-500"></i><span>匯出 Excel</span>`;
+        lucide.createIcons();
+        showToast('再保合約主表清冊已成功匯出為 Excel 檔案！');
+      }, 700);
+    });
+
+    // Filter controls
+    document.getElementById('searchInput').addEventListener('input', renderTable);
+    document.getElementById('productInput').addEventListener('input', renderTable);
+    document.getElementById('typeSelect').addEventListener('change', renderTable);
+    document.querySelectorAll('input[name="statusFilter"]').forEach(radio => {
+      radio.addEventListener('change', renderTable);
+    });
+
+    document.getElementById('btnResetFilter').addEventListener('click', resetFilters);
+    function resetFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('productInput').value = '';
+      document.getElementById('typeSelect').value = '';
+      document.getElementById('dateInput').value = '';
+      document.querySelector('input[name="statusFilter"][value="ALL"]').checked = true;
+      renderTable();
+      showToast('已重設為預設查詢條件');
+    }
+
+    document.getElementById('btnApplyFilter').addEventListener('click', () => {
+      const bar = document.getElementById('loadingBar');
+      bar.classList.remove('hidden');
+      setTimeout(() => {
+        bar.classList.add('hidden');
+        renderTable();
+        showToast('查詢完成');
+      }, 300);
+    });
+
+    // Initial load
+    renderTable();
+    lucide.createIcons();
+  </script>
+</body>
+</html>
