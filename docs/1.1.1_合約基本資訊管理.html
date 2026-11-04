@@ -1,0 +1,1823 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合約基本資訊管理 - 再保系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', '微軟雅黑', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+
+        /* ===== 頂部導航 ===== */
+        .top-bar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .system-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .breadcrumb {
+            font-size: 13px;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breadcrumb span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .breadcrumb-separator {
+            opacity: 0.6;
+        }
+
+        /* ===== 頁面標題區 ===== */
+        .page-header {
+            background: white;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-title h1 {
+            font-size: 24px;
+            color: #333;
+            margin: 0;
+        }
+
+        .page-title-icon {
+            font-size: 28px;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 30px 30px 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* ===== 工具列 ===== */
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #218838;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #138496;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        /* ===== 查詢面板 ===== */
+        .search-panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            border: 1px solid #e0e0e0;
+        }
+
+        .search-panel.show {
+            display: block;
+        }
+
+        .search-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .search-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .search-group label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .search-group input,
+        .search-group select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+        }
+
+        .search-group input:focus,
+        .search-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* ===== 表格 ===== */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            color: #333;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 13px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 13px;
+            color: #666;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        .status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .status.draft {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .status.signing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.active {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status.expired {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .version-badge {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+
+        .product-badge {
+            display: inline-block;
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+
+        /* ===== 模態對話框 ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            margin-top: 40px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #333;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-status {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        /* ===== 表單 ===== */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+            font-size: 13px;
+        }
+
+        .form-group label .required {
+            color: #dc3545;
+            margin-left: 4px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-group input:disabled,
+        .form-group select:disabled {
+            background: #f5f5f5;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-row.full {
+            grid-template-columns: 1fr;
+        }
+
+        .helper-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 4px;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .checkbox-group,
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-item,
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-item input,
+        .radio-item input {
+            width: auto;
+            margin: 0;
+        }
+
+        /* ===== 編號預覽 ===== */
+        .number-preview-box {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .number-preview-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+
+        .number-preview {
+            font-size: 18px;
+            font-weight: bold;
+            color: #1976d2;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .number-preview-breakdown {
+            font-size: 11px;
+            color: #1565c0;
+            margin-top: 8px;
+            line-height: 1.6;
+        }
+
+        /* ===== 簽核流程視圖 ===== */
+        .workflow-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .workflow-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .workflow-steps {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .workflow-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            min-width: 100px;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+        }
+
+        .step-circle.pending {
+            background: #ddd;
+        }
+
+        .step-circle.active {
+            background: #667eea;
+        }
+
+        .step-circle.completed {
+            background: #28a745;
+        }
+
+        .step-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+
+        .step-person {
+            font-size: 11px;
+            color: #999;
+            text-align: center;
+        }
+
+        .workflow-arrow {
+            flex: 0.5;
+            height: 2px;
+            background: #ddd;
+            min-width: 30px;
+        }
+
+        /* ===== 表單操作區 ===== */
+        .form-section {
+            margin-bottom: 25px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            flex-wrap: wrap;
+        }
+
+        .btn-submit {
+            padding: 12px 32px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            background: #218838;
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+        .btn-cancel {
+            padding: 12px 32px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        .btn-secondary-action {
+            padding: 12px 24px;
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary-action:hover {
+            background: #f0f4ff;
+        }
+
+        /* ===== 提示框 ===== */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: none;
+            border-left: 4px solid;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-info {
+            background: #e7f3ff;
+            border-left-color: #2196F3;
+            color: #0c5460;
+        }
+
+        .alert-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        /* ===== 吐司通知 ===== */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: #28a745;
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            animation: slideIn 0.3s ease;
+            z-index: 2000;
+        }
+
+        .toast.error {
+            background: #dc3545;
+        }
+
+        .toast.warning {
+            background: #ffc107;
+            color: #333;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ===== 其他 ===== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+
+        .pagination button:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .pagination button.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e8f4f8;
+            color: #667eea;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .renewal-info-box {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .renewal-info-box p {
+            margin: 6px 0;
+            font-size: 13px;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== 頂部導航 ===== -->
+    <div class="top-bar">
+        <div class="system-name">📋 再保系統</div>
+        <div class="breadcrumb">
+            <span>再保合約管理</span>
+            <span class="breadcrumb-separator">></span>
+            <span>合約簽訂與維護</span>
+            <span class="breadcrumb-separator">></span>
+            <span>合約基本資訊管理</span>
+        </div>
+    </div>
+
+    <!-- ===== 頁面標題區 ===== -->
+    <div class="page-header">
+        <div class="page-title">
+            <div class="page-title-icon">📑</div>
+            <h1>合約基本資訊管理</h1>
+        </div>
+        <div class="page-actions">
+            <button class="btn btn-info" onclick="alert('幫助文檔')">❓ 幫助</button>
+        </div>
+    </div>
+
+    <!-- ===== 主容器 ===== -->
+    <div class="container">
+        <!-- 再保合約列表 -->
+        <div class="card">
+            <div class="card-title">
+                <span>📋</span>
+                <span>再保合約清單</span>
+            </div>
+
+            <div class="toolbar">
+                <button class="btn btn-primary" onclick="openAddModal()">➕ 新增合約</button>
+                <button class="btn btn-secondary" onclick="toggleSearchPanel()">🔍 進階查詢</button>
+                <button class="btn btn-info" onclick="alert('匯出功能：匯出為Excel')">📊 匯出</button>
+            </div>
+
+            <!-- 查詢面板 -->
+            <div class="search-panel" id="searchPanel">
+                <div class="search-row">
+                    <div class="search-group">
+                        <label>合約編號/名稱</label>
+                        <input type="text" id="searchName" placeholder="搜尋合約編號或名稱...">
+                    </div>
+                    <div class="search-group">
+                        <label>合約類型</label>
+                        <select id="searchType">
+                            <option value="">-- 全部 --</option>
+                            <option value="QS">QS (分保)</option>
+                            <option value="Surplus">Surplus (溢額)</option>
+                            <option value="XL">XL (超額)</option>
+                            <option value="Mixed">混合型</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="search-row">
+                    <div class="search-group">
+                        <label>合約狀態</label>
+                        <select id="searchStatus">
+                            <option value="">-- 全部 --</option>
+                            <option value="draft">草稿</option>
+                            <option value="signing">簽核中</option>
+                            <option value="signed">已簽署</option>
+                            <option value="active">生效中</option>
+                            <option value="expired">已失效</option>
+                        </select>
+                    </div>
+                    <div class="search-group">
+                        <label>生效日期範圍</label>
+                        <input type="date" id="searchDateFrom" placeholder="開始日期">
+                    </div>
+                </div>
+                <div class="search-row">
+                    <div class="search-group">
+                        <label>生效日期至</label>
+                        <input type="date" id="searchDateTo" placeholder="結束日期">
+                    </div>
+                </div>
+                <div class="search-actions">
+                    <button class="btn btn-primary" onclick="searchContracts()">🔍 查詢</button>
+                    <button class="btn btn-secondary" onclick="resetSearch()">重置</button>
+                </div>
+            </div>
+
+            <!-- 表格 -->
+            <div class="table-container">
+                <table id="contractTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">合約編號</th>
+                            <th style="width: 25%;">合約名稱</th>
+                            <th style="width: 10%;">類型</th>
+                            <th style="width: 10%;">險別</th>
+                            <th style="width: 10%;">生效日期</th>
+                            <th style="width: 10%;">失效日期</th>
+                            <th style="width: 8%;">狀態</th>
+                            <th style="width: 12%;">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CT-2024-FB-001<span class="version-badge">V1</span></td>
+                            <td>ABC保險公司QS合約</td>
+                            <td>QS (分保)</td>
+                            <td><span class="product-badge">火險(FB)</span></td>
+                            <td>2024-01-01</td>
+                            <td>2024-12-15</td>
+                            <td><span class="status active">生效中</span><br><span style="font-size: 11px; color: #999;">(距失效30天)</span></td>
+                            <td>
+                                <button class="btn btn-info" style="font-size: 12px; padding: 6px 10px;" onclick="editContract('CT-2024-FB-001', 'V1', 'active')">✏️ 查看</button>
+                                <button class="btn btn-secondary" style="font-size: 12px; padding: 6px 10px;" onclick="viewVersionHistory('CT-2024-FB-001')">📜 版本</button>
+                                <button class="btn btn-primary" style="font-size: 12px; padding: 6px 10px;" onclick="startRenewal('CT-2024-FB-001')">🔄 續期</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>CT-2024-MV-001<span class="version-badge">V1</span></td>
+                            <td>XYZ保險公司XL合約</td>
+                            <td>XL (超額)</td>
+                            <td><span class="product-badge">海險(MV)</span></td>
+                            <td>2024-02-01</td>
+                            <td>2025-01-31</td>
+                            <td><span class="status active">生效中</span></td>
+                            <td>
+                                <button class="btn btn-info" style="font-size: 12px; padding: 6px 10px;" onclick="editContract('CT-2024-MV-001', 'V1', 'active')">✏️ 查看</button>
+                                <button class="btn btn-secondary" style="font-size: 12px; padding: 6px 10px;" onclick="viewVersionHistory('CT-2024-MV-001')">📜 版本</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>CT-2024-LB-001<span class="version-badge">V2</span></td>
+                            <td>DEF保險Surplus合約</td>
+                            <td>Surplus (溢額)</td>
+                            <td><span class="product-badge">責任險(LB)</span></td>
+                            <td>2024-03-15</td>
+                            <td>2025-03-14</td>
+                            <td><span class="status active">生效中</span></td>
+                            <td>
+                                <button class="btn btn-info" style="font-size: 12px; padding: 6px 10px;" onclick="editContract('CT-2024-LB-001', 'V2', 'active')">✏️ 查看</button>
+                                <button class="btn btn-secondary" style="font-size: 12px; padding: 6px 10px;" onclick="viewVersionHistory('CT-2024-LB-001')">📜 版本</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>CT-2024-HE-001<span class="version-badge">V1</span></td>
+                            <td>新簽署合約(簽核中)</td>
+                            <td>QS (分保)</td>
+                            <td><span class="product-badge">健康險(HE)</span></td>
+                            <td>2024-11-01</td>
+                            <td>2025-10-31</td>
+                            <td><span class="status signing">簽核中</span></td>
+                            <td>
+                                <button class="btn btn-warning" style="font-size: 12px; padding: 6px 10px;" onclick="editContract('CT-2024-HE-001', 'V1', 'signing')">✏️ 編輯</button>
+                                <button class="btn btn-secondary" style="font-size: 12px; padding: 6px 10px;" onclick="viewSigningStatus('CT-2024-HE-001')">📋 簽核</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>CT-2024-CA-001<span class="version-badge">V1</span></td>
+                            <td>草稿合約</td>
+                            <td>XL (超額)</td>
+                            <td><span class="product-badge">車險(任意)(CA)</span></td>
+                            <td>2024-12-01</td>
+                            <td>2025-11-30</td>
+                            <td><span class="status draft">草稿</span></td>
+                            <td>
+                                <button class="btn btn-warning" style="font-size: 12px; padding: 6px 10px;" onclick="editContract('CT-2024-CA-001', 'V1', 'draft')">✏️ 編輯</button>
+                                <button class="btn btn-danger" style="font-size: 12px; padding: 6px 10px;" onclick="deleteContract('CT-2024-CA-001')">🗑️ 刪除</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>CT-2023-FB-045<span class="version-badge">V1</span></td>
+                            <td>舊合約(已失效)</td>
+                            <td>QS (分保)</td>
+                            <td><span class="product-badge">火險(FB)</span></td>
+                            <td>2023-01-01</td>
+                            <td>2023-12-31</td>
+                            <td><span class="status expired">已失效</span></td>
+                            <td>
+                                <button class="btn btn-secondary" style="font-size: 12px; padding: 6px 10px;" onclick="editContract('CT-2023-FB-045', 'V1', 'expired')">👁️ 查看</button>
+                                <button class="btn btn-primary" style="font-size: 12px; padding: 6px 10px;" onclick="startRenewal('CT-2023-FB-045')">🔄 續期</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination">
+                <button onclick="alert('上一頁')">&lt;</button>
+                <button class="active" onclick="alert('第1頁')">1</button>
+                <button onclick="alert('第2頁')">2</button>
+                <button onclick="alert('第3頁')">3</button>
+                <button onclick="alert('下一頁')">&gt;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 新增/編輯模態對話框 ===== -->
+    <div id="contractModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modalTitle">➕ 新增再保合約</h2>
+                    <div class="modal-status" id="modalStatus"></div>
+                </div>
+                <button type="button" class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+
+            <!-- 續約提示 -->
+            <div class="renewal-info-box" id="renewalInfoBox" style="display: none;">
+                <p><strong>🔄 續期新合約模式</strong></p>
+                <p>原合約編號：<span id="previousContractNo" style="color: #1565c0; font-weight: bold;"></span></p>
+                <p style="margin-top: 8px; font-size: 12px;">系統已預填相關資訊。您可進行必要的修改後提交新版本進行簽核。</p>
+            </div>
+
+            <!-- 簽核流程視圖 -->
+            <div class="workflow-container" id="workflowContainer" style="display: none;">
+                <div class="workflow-title">📊 簽核流程</div>
+                <div class="workflow-steps">
+                    <div class="workflow-step">
+                        <div class="step-circle pending" id="step-draft">1</div>
+                        <div class="step-name">起草</div>
+                        <div class="step-person">再保部</div>
+                    </div>
+                    <div class="workflow-arrow"></div>
+                    <div class="workflow-step">
+                        <div class="step-circle pending" id="step-actuarial">2</div>
+                        <div class="step-name">精算審核</div>
+                        <div class="step-person">精算師</div>
+                    </div>
+                    <div class="workflow-arrow"></div>
+                    <div class="workflow-step">
+                        <div class="step-circle pending" id="step-legal">3</div>
+                        <div class="step-name">法務審核</div>
+                        <div class="step-person">法務主管</div>
+                    </div>
+                    <div class="workflow-arrow"></div>
+                    <div class="workflow-step">
+                        <div class="step-circle pending" id="step-finance">4</div>
+                        <div class="step-name">財務審核</div>
+                        <div class="step-person">財務主管</div>
+                    </div>
+                    <div class="workflow-arrow"></div>
+                    <div class="workflow-step">
+                        <div class="step-circle pending" id="step-manager">5</div>
+                        <div class="step-name">主管簽核</div>
+                        <div class="step-person">再保主管</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 警告提示 -->
+            <div class="alert alert-info" id="readonlyAlert" style="display: none;">
+                <div class="alert-title">🔒 已簽署的合約</div>
+                <p>此合約已簽署，大部分欄位為唯讀模式。如需修改關鍵欄位，請使用「新增版本」功能。</p>
+            </div>
+
+            <form id="contractForm" onsubmit="submitForm(event)">
+                <!-- 基本資訊 -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <div class="section-icon">①</div>
+                        合約基本資訊
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>合約編號 <span class="required">*</span></label>
+                            <input type="text" id="contractNo" placeholder="系統自動生成" readonly style="background: #f5f5f5;">
+                            <div class="helper-text">格式：CT-YYYY-XX-XXX（系統自動生成）</div>
+                            <div class="number-preview-box">
+                                <div class="number-preview-title">📌 編號預覽</div>
+                                <div class="number-preview" id="numberPreview">CT-YYYY-XX-XXX</div>
+                                <div class="number-preview-breakdown" id="numberBreakdown">
+                                    CT = Contract (合約)<br>
+                                    YYYY = 年份<br>
+                                    XX = 險別代碼<br>
+                                    XXX = 序號
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>前份合約編號
+                                <span class="renewal-info" id="renewalLabel" style="display: none;"></span>
+                            </label>
+                            <input type="text" id="previousContract" placeholder="若為續約會自動填入" readonly style="background: #f5f5f5;">
+                            <div class="helper-text">用於記錄此合約是由哪份合約續期而來</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>合約名稱 <span class="required">*</span></label>
+                            <input type="text" id="contractName" placeholder="例如：ABC保險公司QS合約" required>
+                            <div class="helper-text">長度1-100個字符</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>合約類型 <span class="required">*</span></label>
+                            <select id="contractType" required>
+                                <option value="">-- 請選擇 --</option>
+                                <option value="QS">QS (分保/Quota Share)</option>
+                                <option value="Surplus">Surplus (溢額)</option>
+                                <option value="XL">XL (超額/Excess of Loss)</option>
+                                <option value="Mixed">混合型</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>簽署日期 <span class="required">*</span></label>
+                            <input type="date" id="signDate" required>
+                            <div class="helper-text">合約簽署的實際日期</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 適用商品（險別選擇） -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <div class="section-icon">②</div>
+                        適用商品（決定編號的險別代碼）
+                    </div>
+
+                    <div class="form-group">
+                        <label>選擇主要適用商品 <span class="required">*</span></label>
+                        <div class="radio-group">
+                            <div class="radio-item">
+                                <input type="radio" name="mainProduct" id="product1" value="FB" onchange="updateNumberPreview()">
+                                <label for="product1" style="margin: 0;">🔥 火險 (FB)</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" name="mainProduct" id="product2" value="MV" onchange="updateNumberPreview()">
+                                <label for="product2" style="margin: 0;">🌊 海險 (MV)</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" name="mainProduct" id="product3" value="AV" onchange="updateNumberPreview()">
+                                <label for="product3" style="margin: 0;">✈️ 航空險 (AV)</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" name="mainProduct" id="product4" value="LB" onchange="updateNumberPreview()">
+                                <label for="product4" style="margin: 0;">⚖️ 責任險 (LB)</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" name="mainProduct" id="product5" value="HE" onchange="updateNumberPreview()">
+                                <label for="product5" style="margin: 0;">💊 健康險 (HE)</label>
+                            </div>
+                            <div class="radio-item">
+                                <input type="radio" name="mainProduct" id="product6" value="CA" onchange="updateNumberPreview()">
+                                <label for="product6" style="margin: 0;">🚗 車險(任意) (CA)</label>
+                            </div>
+                        </div>
+                        <div id="productsError" class="error-message" style="display: none;">❌ 請選擇一項主要商品（用於編號的險別代碼）</div>
+                    </div>
+
+                    
+                </div>
+
+                <!-- 生效日期 -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <div class="section-icon">③</div>
+                        合約期間
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>生效日期 <span class="required">*</span></label>
+                            <input type="date" id="effectiveDate" required onchange="autoFillExpireDate()">
+                            <div class="helper-text">合約開始生效的日期</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>失效日期 <span class="required">*</span></label>
+                            <input type="date" id="expireDate" required>
+                            <div class="helper-text">預設為生效日期的1年後</div>
+                        </div>
+                    </div>
+
+                    <div id="dateValidationMsg" class="helper-text"></div>
+                </div>
+
+                <!-- 內部資訊（可編輯） -->
+                <div class="form-section">
+                    <div class="section-title">
+                        <div class="section-icon">④</div>
+                        內部資訊 <span class="tag">✏️ 可編輯</span>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>內部承辦人</label>
+                            <input type="text" id="contactPerson" placeholder="例如：王小明">
+                            <div class="helper-text">本公司內部負責此合約的承辦人</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>部門</label>
+                            <select id="department">
+                                <option value="">-- 請選擇 --</option>
+                                <option value="再保部">再保部</option>
+                                <option value="保險部">保險部</option>
+                                <option value="業務部">業務部</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>備註</label>
+                            <textarea id="remark" placeholder="可輸入相關備註信息..."></textarea>
+                            <div class="helper-text">內部記錄用，支持中英文、數字、標點符號</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 版本控制資訊（新版本時） -->
+                <div class="form-section" id="versionSection" style="display: none;">
+                    <div class="section-title">
+                        <div class="section-icon">⚠️</div>
+                        版本控制資訊
+                    </div>
+
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>變更原因 <span class="required">*</span></label>
+                            <select id="changeReason" required>
+                                <option value="">-- 請選擇 --</option>
+                                <option value="分配比例調整">分配比例調整</option>
+                                <option value="額度增加">額度增加</option>
+                                <option value="額度減少">額度減少</option>
+                                <option value="新增商品">新增商品</option>
+                                <option value="再保人變更">再保人變更</option>
+                                <option value="錯誤修正">錯誤修正</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row full">
+                        <div class="form-group">
+                            <label>變更說明 <span class="required">*</span></label>
+                            <textarea id="changeDescription" placeholder="詳細說明此版本的變更內容..." required></textarea>
+                            <div class="helper-text">用於後續追蹤此版本的原因</div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>新版本生效日期 <span class="required">*</span></label>
+                            <input type="date" id="versionEffectiveDate" required>
+                            <div class="helper-text">此版本何時開始生效</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按鈕 -->
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeModal()">❌ 取消</button>
+                    <button type="button" class="btn-secondary-action" id="newVersionBtn" onclick="switchToNewVersion()" style="display: none;">🔄 新增版本</button>
+                    <button type="button" class="btn-secondary-action" id="editDraftBtn" onclick="editDraft()" style="display: none;">✏️ 編輯</button>
+                    <button type="submit" class="btn-submit" id="submitBtn">💾 保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== 簽核狀態模態 ===== -->
+    <div id="signingStatusModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📋 合約簽核狀態</h2>
+                <button type="button" class="close-btn" onclick="closeSigingStatusModal()">&times;</button>
+            </div>
+
+            <div class="workflow-container">
+                <div class="workflow-title">簽核進度</div>
+                <div class="workflow-steps">
+                    <div class="workflow-step">
+                        <div class="step-circle completed">✓</div>
+                        <div class="step-name">起草</div>
+                        <div class="step-person">再保部 - 已完成</div>
+                    </div>
+                    <div class="workflow-arrow"></div>
+                    <div class="workflow-step">
+                        <div class="step-circle active">⧐</div>
+                        <div class="step-name">精算審核</div>
+                        <div class="step-person">精算師 - 審核中</div>
+                    </div>
+                    <div class="workflow-arrow"></div>
+                    <div class="workflow-step">
+                        <div class="step-circle pending">3</div>
+                        <div class="step-name">法務審核</div>
+                        <div class="step-person">法務主管 - 待處理</div>
+                    </div>
+                    <div class="workflow-arrow"></div>
+                    <div class="workflow-step">
+                        <div class="step-circle pending">4</div>
+                        <div class="step-name">財務審核</div>
+                        <div class="step-person">財務主管 - 待處理</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                <h4 style="margin-bottom: 10px;">📝 簽核意見</h4>
+                <div style="font-size: 13px; line-height: 1.6;">
+                    <div style="margin-bottom: 10px;">
+                        <strong>✓ 再保部 (2024-11-15)</strong><br>
+                        起草完成，已提交簽核。
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <strong>⧐ 精算師 (進行中)</strong><br>
+                        正在審核風險分配...
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" onclick="closeSigingStatusModal()">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== 版本歷史模態 ===== -->
+    <div id="versionHistoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📜 合約版本歷史</h2>
+                <button type="button" class="close-btn" onclick="closeVersionHistoryModal()">&times;</button>
+            </div>
+
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                        <th style="padding: 12px; text-align: left;">版本</th>
+                        <th style="padding: 12px; text-align: left;">狀態</th>
+                        <th style="padding: 12px; text-align: left;">簽署日期</th>
+                        <th style="padding: 12px; text-align: left;">變更原因</th>
+                        <th style="padding: 12px; text-align: left;">操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px;"><strong>V2</strong> (當前)</td>
+                        <td style="padding: 12px;"><span class="status active">生效中</span></td>
+                        <td style="padding: 12px;">2024-11-10</td>
+                        <td style="padding: 12px;">分配比例調整</td>
+                        <td style="padding: 12px;">
+                            <button class="btn btn-info" style="font-size: 11px; padding: 4px 8px;" onclick="viewVersion('V2')">查看</button>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #dee2e6;">
+                        <td style="padding: 12px;"><strong>V1</strong></td>
+                        <td style="padding: 12px;"><span class="status">已替代</span></td>
+                        <td style="padding: 12px;">2024-09-01</td>
+                        <td style="padding: 12px;">初始簽署</td>
+                        <td style="padding: 12px;">
+                            <button class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;" onclick="viewVersion('V1')">查看</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="form-actions">
+                <button type="button" class="btn-cancel" onclick="closeVersionHistoryModal()">關閉</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 吐司通知 -->
+    <div id="toast" class="toast" style="display: none;"></div>
+
+    <script>
+        // ===== 險別代碼映射 =====
+        const productCodeMap = {
+            'FB': '火險',
+            'MV': '海險',
+            'AV': '航空險',
+            'LB': '責任險',
+            'HE': '健康險',
+            'CA': '車險(任意)'
+        };
+
+        // ===== 全局變數 =====
+        let currentEditMode = null;
+        let currentContractId = null;
+        let currentVersion = null;
+        let currentStatus = null;
+        let isRenewal = false;
+        let renewalSourceContract = null;
+        let nextSequenceNo = {
+            'FB': 2, 'MV': 2, 'AV': 1, 'LB': 2, 'HE': 2, 'CA': 2
+        };
+
+        // ===== 工具函數 =====
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            if (type === 'error') toast.classList.add('error');
+            if (type === 'warning') toast.classList.add('warning');
+            toast.style.display = 'block';
+
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        function generateAutoNo(productCode) {
+            if (!productCode) return 'CT-YYYY-XX-XXX';
+            
+            const year = new Date().getFullYear();
+            const seq = nextSequenceNo[productCode].toString().padStart(3, '0');
+            nextSequenceNo[productCode]++;
+            return `CT-${year}-${productCode}-${seq}`;
+        }
+
+        function updateNumberPreview() {
+            const selectedProduct = document.querySelector('input[name="mainProduct"]:checked');
+            const contractNo = document.getElementById('contractNo');
+            const numberPreview = document.getElementById('numberPreview');
+            const numberBreakdown = document.getElementById('numberBreakdown');
+            
+            if (selectedProduct) {
+                const productCode = selectedProduct.value;
+                const productName = productCodeMap[productCode];
+                const year = new Date().getFullYear();
+                const seq = nextSequenceNo[productCode].toString().padStart(3, '0');
+                
+                const newNo = `CT-${year}-${productCode}-${seq}`;
+                contractNo.value = newNo;
+                numberPreview.textContent = newNo;
+                numberPreview.style.color = '#1976d2';
+                
+                numberBreakdown.innerHTML = `
+                    CT = Contract (合約)<br>
+                    ${year} = 年份<br>
+                    ${productCode} = 險別代碼 (${productName})<br>
+                    ${seq} = 序號
+                `;
+            } else {
+                contractNo.value = 'CT-YYYY-XX-XXX';
+                numberPreview.textContent = 'CT-YYYY-XX-XXX';
+                numberPreview.style.color = '#999';
+                numberBreakdown.innerHTML = `
+                    CT = Contract (合約)<br>
+                    YYYY = 年份<br>
+                    XX = 險別代碼<br>
+                    XXX = 序號
+                `;
+            }
+        }
+
+        // ===== 查詢相關 =====
+        function toggleSearchPanel() {
+            const panel = document.getElementById('searchPanel');
+            panel.classList.toggle('show');
+        }
+
+        function searchContracts() {
+            showToast('✅ 查詢已執行', 'success');
+            document.getElementById('searchPanel').classList.remove('show');
+        }
+
+        function resetSearch() {
+            document.getElementById('searchName').value = '';
+            document.getElementById('searchType').value = '';
+            document.getElementById('searchStatus').value = '';
+            document.getElementById('searchDateFrom').value = '';
+            document.getElementById('searchDateTo').value = '';
+        }
+
+        // ===== 新增/編輯相關 =====
+        function openAddModal() {
+            currentEditMode = 'add';
+            currentContractId = null;
+            currentVersion = null;
+            currentStatus = null;
+            isRenewal = false;
+            renewalSourceContract = null;
+
+            resetForm();
+            updateFormState();
+            document.getElementById('contractNo').value = 'CT-YYYY-XX-XXX';
+            document.getElementById('previousContract').value = '';
+            document.getElementById('renewalInfoBox').style.display = 'none';
+            document.getElementById('modalTitle').textContent = '➕ 新增再保合約';
+            document.getElementById('modalStatus').textContent = '狀態：草稿 | 全部欄位可編輯';
+            document.getElementById('contractModal').classList.add('show');
+        }
+
+        function startRenewal(contractId) {
+            currentEditMode = 'renewal';
+            currentContractId = null;
+            currentVersion = 'V1';
+            currentStatus = null;
+            isRenewal = true;
+            renewalSourceContract = contractId;
+
+            resetForm();
+
+            const productCode = extractProductCode(contractId);
+            const newContractNo = generateAutoNo(productCode);
+            document.getElementById('contractNo').value = newContractNo;
+            
+            const radioButton = document.querySelector(`input[name="mainProduct"][value="${productCode}"]`);
+            if (radioButton) {
+                radioButton.checked = true;
+            }
+
+            document.getElementById('previousContract').value = contractId;
+
+            const contractData = getContractData(contractId);
+            document.getElementById('contractName').value = contractData.name;
+            document.getElementById('contractType').value = contractData.type;
+            document.getElementById('signDate').value = new Date().toISOString().split('T')[0];
+
+            const originalExpireDate = new Date(contractData.expireDate);
+            const newEffectiveDate = new Date(originalExpireDate);
+            newEffectiveDate.setDate(newEffectiveDate.getDate() + 1);
+            document.getElementById('effectiveDate').value = newEffectiveDate.toISOString().split('T')[0];
+
+            autoFillExpireDate();
+            document.getElementById('contactPerson').value = contractData.contactPerson;
+            document.getElementById('department').value = contractData.department;
+
+            updateFormState();
+            document.getElementById('renewalInfoBox').style.display = 'block';
+            document.getElementById('previousContractNo').textContent = contractId;
+            document.getElementById('renewalLabel').style.display = 'inline';
+            document.getElementById('renewalLabel').textContent = '(續期自動填入)';
+            document.getElementById('modalTitle').textContent = '🔄 續期新合約';
+            document.getElementById('modalStatus').textContent = `狀態：新合約 | 源合約：${contractId}`;
+            document.getElementById('contractModal').classList.add('show');
+
+            showToast(`🔄 已進入續期模式，原合約：${contractId}`, 'warning');
+        }
+
+        function extractProductCode(contractId) {
+            const parts = contractId.split('-');
+            if (parts.length >= 3) {
+                return parts[2];
+            }
+            return 'FB';
+        }
+
+        function getContractData(contractId) {
+            const contractMap = {
+                'CT-2023-FB-045': {
+                    name: '舊合約(已失效)',
+                    type: 'QS',
+                    products: ['火險'],
+                    contactPerson: '張三',
+                    department: '再保部',
+                    expireDate: '2023-12-31'
+                }
+            };
+            return contractMap[contractId] || {
+                name: '預設合約',
+                type: 'QS',
+                products: [],
+                contactPerson: '',
+                department: '',
+                expireDate: new Date().toISOString().split('T')[0]
+            };
+        }
+
+        function editContract(contractId, version, status) {
+            currentEditMode = status === 'active' ? 'edit-signed' : (status === 'signing' ? 'edit-signing' : 'edit-draft');
+            currentContractId = contractId;
+            currentVersion = version;
+            currentStatus = status;
+            isRenewal = false;
+            renewalSourceContract = null;
+
+            document.getElementById('contractNo').value = contractId;
+            document.getElementById('previousContract').value = '';
+            document.getElementById('contractName').value = status === 'draft' ? '新簽署合約(簽核中)' : (contractId === 'CT-2024-LB-001' ? 'DEF保險Surplus合約' : contractId === 'CT-2023-FB-045' ? '舊合約(已失效)' : 'ABC保險公司QS合約');
+            document.getElementById('contractType').value = contractId === 'CT-2024-MV-001' ? 'XL' : (contractId === 'CT-2024-LB-001' ? 'Surplus' : 'QS');
+            document.getElementById('signDate').value = '2024-01-01';
+            document.getElementById('effectiveDate').value = contractId === 'CT-2024-MV-001' ? '2024-02-01' : (contractId === 'CT-2024-LB-001' ? '2024-03-15' : '2024-01-01');
+            document.getElementById('expireDate').value = contractId === 'CT-2024-MV-001' ? '2025-01-31' : (contractId === 'CT-2024-LB-001' ? '2025-03-14' : '2024-12-31');
+            document.getElementById('contactPerson').value = '王小明';
+            document.getElementById('department').value = '再保部';
+
+            document.getElementById('modalTitle').textContent = currentEditMode === 'edit-draft' ? '✏️ 編輯草稿合約' : (currentEditMode === 'edit-signed' ? '👁️ 查看已簽署合約' : '🔄 編輯簽核中合約');
+            document.getElementById('modalStatus').textContent = `狀態：${status === 'active' ? '生效中' : (status === 'signed' ? '已簽署' : (status === 'signing' ? '簽核中' : (status === 'draft' ? '草稿' : '已失效')))} | 版本：${version}`;
+            document.getElementById('renewalInfoBox').style.display = 'none';
+
+            updateFormState();
+            document.getElementById('contractModal').classList.add('show');
+        }
+
+        function editDraft() {
+            document.getElementById('contractType').disabled = false;
+            document.getElementById('effectiveDate').disabled = false;
+            document.getElementById('expireDate').disabled = false;
+            document.getElementById('editDraftBtn').style.display = 'none';
+            showToast('✏️ 已進入編輯模式', 'warning');
+        }
+
+        function switchToNewVersion() {
+            currentEditMode = 'new-version';
+            document.getElementById('versionSection').style.display = 'block';
+            document.getElementById('newVersionBtn').style.display = 'none';
+            document.getElementById('changeReason').required = true;
+            document.getElementById('changeDescription').required = true;
+            document.getElementById('versionEffectiveDate').required = true;
+            showToast('🔄 已切換到新增版本模式', 'warning');
+            updateFormState();
+        }
+
+        function updateFormState() {
+            const contractType = document.getElementById('contractType');
+            const effectiveDate = document.getElementById('effectiveDate');
+            const expireDate = document.getElementById('expireDate');
+            const newVersionBtn = document.getElementById('newVersionBtn');
+            const editDraftBtn = document.getElementById('editDraftBtn');
+            const readonlyAlert = document.getElementById('readonlyAlert');
+            const workflowContainer = document.getElementById('workflowContainer');
+            const versionSection = document.getElementById('versionSection');
+            const submitBtn = document.getElementById('submitBtn');
+
+            if (currentEditMode === 'add' || currentEditMode === 'edit-draft' || currentEditMode === 'renewal') {
+                contractType.disabled = false;
+                effectiveDate.disabled = false;
+                expireDate.disabled = false;
+                newVersionBtn.style.display = 'none';
+                editDraftBtn.style.display = 'none';
+                readonlyAlert.style.display = 'none';
+                workflowContainer.style.display = 'none';
+                versionSection.style.display = 'none';
+                submitBtn.textContent = currentEditMode === 'renewal' ? '📤 提交簽核' : '💾 保存';
+            } else if (currentEditMode === 'edit-signed' || currentEditMode === 'edit-signing') {
+                contractType.disabled = true;
+                effectiveDate.disabled = true;
+                expireDate.disabled = true;
+                newVersionBtn.style.display = 'inline-block';
+                editDraftBtn.style.display = currentEditMode === 'edit-signing' ? 'inline-block' : 'none';
+                readonlyAlert.style.display = 'block';
+                workflowContainer.style.display = currentEditMode === 'edit-signing' ? 'block' : 'none';
+                versionSection.style.display = 'none';
+                submitBtn.textContent = '💾 儲存備註';
+            } else if (currentEditMode === 'new-version') {
+                contractType.disabled = false;
+                effectiveDate.disabled = false;
+                expireDate.disabled = false;
+                newVersionBtn.style.display = 'none';
+                editDraftBtn.style.display = 'none';
+                readonlyAlert.style.display = 'none';
+                workflowContainer.style.display = 'block';
+                versionSection.style.display = 'block';
+                submitBtn.textContent = '📤 提交簽核';
+            }
+        }
+
+        function autoFillExpireDate() {
+            const effectiveDate = document.getElementById('effectiveDate').value;
+            if (effectiveDate) {
+                const date = new Date(effectiveDate);
+                date.setFullYear(date.getFullYear() + 1);
+                date.setDate(date.getDate() - 1);
+                const year = date.getFullYear();
+                const month = (date.getMonth() + 1).toString().padStart(2, '0');
+                const day = date.getDate().toString().padStart(2, '0');
+                document.getElementById('expireDate').value = `${year}-${month}-${day}`;
+                validateDates();
+            }
+        }
+
+        function validateDates() {
+            const signDate = new Date(document.getElementById('signDate').value);
+            const effectiveDate = new Date(document.getElementById('effectiveDate').value);
+            const expireDate = new Date(document.getElementById('expireDate').value);
+            const msgDiv = document.getElementById('dateValidationMsg');
+
+            let messages = [];
+
+            if (effectiveDate < signDate) {
+                messages.push('⚠️ 生效日期不能早於簽署日期');
+            }
+            if (expireDate < effectiveDate) {
+                messages.push('❌ 失效日期不能早於生效日期');
+            }
+            if (expireDate.getTime() - effectiveDate.getTime() < 365 * 24 * 60 * 60 * 1000) {
+                messages.push('⚠️ 建議合約期間至少1年');
+            }
+
+            msgDiv.innerHTML = messages.join('<br>');
+        }
+
+        function validateProducts() {
+            const mainProduct = document.querySelector('input[name="mainProduct"]:checked');
+            const errorDiv = document.getElementById('productsError');
+
+            if (!mainProduct) {
+                errorDiv.style.display = 'block';
+                return false;
+            } else {
+                errorDiv.style.display = 'none';
+                return true;
+            }
+        }
+
+        function submitForm(event) {
+            event.preventDefault();
+
+            const contractNo = document.getElementById('contractNo').value;
+            const contractName = document.getElementById('contractName').value;
+            const contractType = document.getElementById('contractType').value;
+            const signDate = document.getElementById('signDate').value;
+            const effectiveDate = document.getElementById('effectiveDate').value;
+            const expireDate = document.getElementById('expireDate').value;
+
+            if (!contractNo || contractNo === 'CT-YYYY-XX-XXX' || !contractName || !contractType || !signDate || !effectiveDate || !expireDate) {
+                showToast('❌ 請填寫所有必填欄位', 'error');
+                return;
+            }
+
+            if (!validateProducts()) {
+                showToast('❌ 請選擇主要商品（用於編號的險別代碼）', 'error');
+                return;
+            }
+
+            if (currentEditMode === 'new-version') {
+                const changeReason = document.getElementById('changeReason').value;
+                const changeDescription = document.getElementById('changeDescription').value;
+                const versionEffectiveDate = document.getElementById('versionEffectiveDate').value;
+
+                if (!changeReason || !changeDescription || !versionEffectiveDate) {
+                    showToast('❌ 請填寫版本控制資訊', 'error');
+                    return;
+                }
+
+                showToast(`✅ 新版本 ${currentContractId}-V3 已提交簽核！`, 'success');
+            } else if (currentEditMode === 'edit-signed' || currentEditMode === 'edit-signing') {
+                showToast(`✅ 備註已儲存！`, 'success');
+            } else if (currentEditMode === 'renewal') {
+                const previousContract = document.getElementById('previousContract').value;
+                showToast(`✅ 續期新合約 ${contractNo} 已提交簽核！(源合約：${previousContract})`, 'success');
+            } else {
+                showToast(`✅ 合約 ${contractNo} 已保存為草稿！`, 'success');
+            }
+
+            setTimeout(() => closeModal(), 1000);
+        }
+
+        function resetForm() {
+            document.getElementById('contractForm').reset();
+            document.getElementById('contractNo').value = 'CT-YYYY-XX-XXX';
+            document.getElementById('previousContract').value = '';
+            document.getElementById('productsError').style.display = 'none';
+            document.getElementById('dateValidationMsg').innerHTML = '';
+            document.getElementById('versionSection').style.display = 'none';
+            updateNumberPreview();
+        }
+
+        function closeModal() {
+            document.getElementById('contractModal').classList.remove('show');
+        }
+
+        function viewSigningStatus(contractId) {
+            document.getElementById('signingStatusModal').classList.add('show');
+        }
+
+        function closeSigingStatusModal() {
+            document.getElementById('signingStatusModal').classList.remove('show');
+        }
+
+        function viewVersionHistory(contractId) {
+            document.getElementById('versionHistoryModal').classList.add('show');
+        }
+
+        function closeVersionHistoryModal() {
+            document.getElementById('versionHistoryModal').classList.remove('show');
+        }
+
+        function viewVersion(version) {
+            showToast(`📜 正在查看版本 ${version}...`, 'info');
+        }
+
+        function deleteContract(contractId) {
+            if (confirm(`確定要刪除合約 ${contractId} 嗎？此操作無法復原。`)) {
+                showToast(`✅ 合約 ${contractId} 已刪除`, 'success');
+            }
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById('contractModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+
+            const signingModal = document.getElementById('signingStatusModal');
+            if (event.target == signingModal) {
+                closeSigingStatusModal();
+            }
+
+            const versionModal = document.getElementById('versionHistoryModal');
+            if (event.target == versionModal) {
+                closeVersionHistoryModal();
+            }
+        }
+
+        window.addEventListener('load', () => {
+            showToast('👋 歡迎使用再保系統', 'success');
+        });
+    </script>
+</body>
+</html>
