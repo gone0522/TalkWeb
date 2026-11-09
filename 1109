@@ -1,0 +1,321 @@
+一、完整 Kubernetes 資源配置清單（以 kustomize 管理）
+
+建議在 reinsurance-core-service（或統一的部署目錄）中建立如下的 k8s/ 結構：
+
+k8s/
+├── namespace.yaml
+├── postgres.yaml
+├── core-service.yaml
+├── web-portal.yaml
+├── ingress.yaml
+└── kustomization.yaml
+1. k8s/namespace.yaml
+yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: reinsurance
+2. k8s/postgres.yaml (專屬 PostgreSQL 16 StatefulSet)
+yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: reinsurance-postgres
+  namespace: reinsurance
+spec:
+  serviceName: reinsurance-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reinsurance-postgres
+  template:
+    metadata:
+      labels:
+        app: reinsurance-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              value: app_db
+            - name: POSTGRES_USER
+              value: dev_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: reinsurance-secrets
+                  key: DB_PASSWORD
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 10Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reinsurance-postgres
+  namespace: reinsurance
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: reinsurance-postgres
+3. k8s/core-service.yaml (Spring Boot 3.2 後端)
+yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reinsurance-core
+  namespace: reinsurance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reinsurance-core
+  template:
+    metadata:
+      labels:
+        app: reinsurance-core
+    spec:
+      containers:
+        - name: core
+          image: reinsurance-core:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://reinsurance-postgres:5432/app_db"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: dev_user
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: reinsurance-secrets
+                  key: DB_PASSWORD
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: reinsurance-secrets
+                  key: JWT_SECRET
+          resources:
+            requests:
+              cpu: 200m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 40
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reinsurance-core
+  namespace: reinsurance
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      name: http
+  selector:
+    app: reinsurance-core
+4. k8s/web-portal.yaml (Next.js 14 前端)
+yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reinsurance-web
+  namespace: reinsurance
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reinsurance-web
+  template:
+    metadata:
+      labels:
+        app: reinsurance-web
+    spec:
+      containers:
+        - name: web
+          image: reinsurance-web:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PORT
+              value: "3000"
+            - name: NEXT_PUBLIC_API_URL
+              value: "/api" # 同網域相對路徑，徹底避免 CORS
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reinsurance-web
+  namespace: reinsurance
+spec:
+  ports:
+    - port: 3000
+      targetPort: 3000
+      name: http
+  selector:
+    app: reinsurance-web
+5. k8s/ingress.yaml (Traefik 整合網關)
+yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: reinsurance-ingress
+  namespace: reinsurance
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: reinsurance.fsc1.homes # 若要直連 IP，亦可加一組不帶 host 的規則
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: reinsurance-core
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: reinsurance-web
+                port:
+                  number: 3000
+6. k8s/kustomization.yaml
+yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: reinsurance
+resources:
+  - namespace.yaml
+  - postgres.yaml
+  - core-service.yaml
+  - web-portal.yaml
+  - ingress.yaml
+images:
+  - name: reinsurance-core
+    newName: reinsurance-core
+    newTag: latest
+  - name: reinsurance-web
+    newName: reinsurance-web
+    newTag: latest
+二、GitHub Actions 完整自動化 Workflow
+
+以 reinsurance-core-service 的 .github/workflows/deploy.yml 為例：
+
+yaml
+name: Deploy Core Service to fsc1-vm01
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency:
+  group: deploy-reinsurance-core
+  cancel-in-progress: false
+jobs:
+  deploy:
+    name: 建置並部署到 k3s (140.110.146.247)
+    runs-on: [self-hosted, linux, fsc1-vm01]
+    environment: production
+    steps:
+      - name: Checkout Code with Submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # 若 contracts 為私有 Repo，需配置具備 repo 讀取權限的 PAT
+          token: ${{ secrets.SUBMODULE_ACCESS_TOKEN || github.token }}
+      - name: 建立 Kubernetes 密鑰 (初次或更新)
+        run: |
+          kubectl apply -f k8s/namespace.yaml
+          kubectl -n reinsurance create secret generic reinsurance-secrets \
+            --from-literal=DB_PASSWORD="${{ secrets.DB_PASSWORD }}" \
+            --from-literal=JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            --dry-run=client -o yaml | kubectl apply -f -
+      - name: 建置 Docker 映像檔
+        run: docker build -t reinsurance-core:${{ github.sha }} .
+      - name: 匯入映像檔至 k3s containerd
+        run: docker save reinsurance-core:${{ github.sha }} | sudo -n /usr/local/bin/k3s ctr images import -
+      - name: 套用更新 (GitOps)
+        run: |
+          cd k8s
+          sed -i "s|newName: reinsurance-core.*|newName: reinsurance-core\n    newTag: \"${{ github.sha }}\"|" kustomization.yaml
+          kubectl apply -k .
+      - name: 等待服務就緒
+        run: |
+          kubectl -n reinsurance rollout status deployment/reinsurance-core --timeout=300s
+      - name: 清理本機暫存映像檔
+        if: always()
+        run: docker image rm reinsurance-core:${{ github.sha }} || true
+三、一步步落地實施計畫 (Implementation Checklist)
+GitHub 端前置作業：
+ 在 GitHub 個人帳號建立一個具備 repo 讀取權限的 Personal Access Token (PAT)。
+ 在 reinsurance-core-service 與 reinsurance-web-portal 的 Settings → Secrets 設定 SUBMODULE_ACCESS_TOKEN，讓 CI 能拉取 reinsurance-contracts。
+ 在兩專案的 Environments 建立 production 並填寫 DB_PASSWORD 與 JWT_SECRET。
+專案程式碼配置：
+ 在 web-portal 的 next.config.js 加入 output: 'standalone'。
+ 將上述 Dockerfile 分別放入兩專案根目錄。
+ 將 k8s/ 目錄提交至專案版控。
+VM 執行驗收：
+ 推送程式碼觸發 Actions 部署。
+ 登入 VM PuTTY 執行：
+bash
+kubectl -n reinsurance get pods,svc,ingress
+ 驗證資料庫 V1__baseline.sql 自動遷移完成，且前後端服務狀態均為 Running！
