@@ -1,0 +1,2078 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>權限管理模組 | 主題式百億基金跨部會整合管理平台</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/vuetify@3.7.12/dist/vuetify.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --header: #F7A600;
+      --ink: #11144F;
+      --accent: #C47700;
+      --page: #F7F8FF;
+      --line: #E3E8EE;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: #263449; background: var(--page); }
+    .v-application {
+      background: var(--page) !important;
+      font-family: "Noto Sans TC", sans-serif !important;
+    }
+    .topbar {
+      min-height: 70px;
+      padding: 10px 25px;
+      background: var(--header);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .brand-main {
+      color: #2C2A25;
+      font-size: 17px;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+    .brand-sub {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #754C12;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .brand-sub em { color: #725D6B; }
+    .prototype-badge {
+      display: inline-block;
+      padding: 1px 5px;
+      border: 1px solid #DDD2FA;
+      border-radius: 3px;
+      color: #6941C6;
+      background: #F5F1FF;
+      font-size: 11px;
+      font-style: normal;
+      font-weight: 700;
+    }
+    .identity-select { width: min(53vw, 830px); min-width: 255px; }
+    .identity-select .v-field {
+      background: #fff !important;
+      border-radius: 4px !important;
+    }
+
+    .shell { display: flex; min-height: calc(100vh - 70px); }
+    .sidebar {
+      position: relative;
+      width: 265px;
+      flex: 0 0 265px;
+      padding: 26px 10px 100px;
+      background: #fff;
+      border-right: 1px solid #E9EBF2;
+    }
+    .sidebar-heading {
+      padding: 0 12px 17px;
+      color: #67717B;
+      font-size: 13px;
+    }
+    .module {
+      min-height: 48px;
+      margin: 2px 0;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 29px;
+      border-radius: 5px;
+      color: #222930;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .module i {
+      width: 25px;
+      color: #596268;
+      font-size: 23px;
+      text-align: center;
+      line-height: 1;
+    }
+    .module.active {
+      background: #FFF4DC;
+      color: #684812;
+      font-weight: 700;
+    }
+    .module.active i { color: #9A752F; }
+    .sidebar-note {
+      position: absolute;
+      bottom: 16px;
+      left: 0;
+      right: 0;
+      padding: 13px 16px;
+      border: 1px solid #DDD2FA;
+      border-radius: 9px;
+      background: #F9F6FF;
+      color: #6941C6;
+      font-size: 12px;
+      font-style: italic;
+      line-height: 1.7;
+    }
+    .sidebar-note .prototype-badge { margin-right: 5px; }
+
+    .content {
+      flex: 1;
+      min-width: 0;
+      max-width: 1700px;
+      padding: 27px 31px 48px;
+    }
+    .eyebrow {
+      color: #825A20;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+    h1 { margin: 0 0 4px; color: #243247; font-size: 26px; }
+    h2 { margin: 0; color: #263449; font-size: 18px; }
+    h3 { margin: 0; color: #263449; font-size: 15px; }
+    .subtle { color: #69778A; font-size: 13px; line-height: 1.7; }
+    .page-head, .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 14px;
+    }
+    .page-head { margin-bottom: 21px; }
+    .panel-head { margin-bottom: 18px; }
+    .panel {
+      margin-top: 18px;
+      padding: 20px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(145px, 1fr));
+      gap: 13px;
+    }
+    .grid.two { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+    .actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .hint {
+      margin-top: 14px;
+      padding: 10px 12px;
+      color: #6941C6;
+      background: #F5F1FF;
+      border: 1px solid #DDD2FA;
+      border-radius: 8px;
+      font-size: 12px;
+      font-style: italic;
+      line-height: 1.7;
+    }
+    .hint strong { margin-right: 6px; font-style: normal; }
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    th, td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: middle;
+      text-align: left;
+    }
+    th { background: #F7F9FC; color: #526074; font-weight: 700; }
+    td.wrap { min-width: 170px; max-width: 370px; white-space: normal; }
+    .empty { padding: 32px 12px; text-align: center; color: #728094; }
+    .tag {
+      display: inline-block;
+      padding: 3px 9px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .tag.green { color: #17683D; background: #E6F6EC; }
+    .tag.gray { color: #606C7C; background: #EEF1F4; }
+    .tag.red { color: #AD3443; background: #FFF0F0; }
+    .tag.amber { color: #865500; background: #FFF2D8; }
+    .inline-btn {
+      border: 0;
+      padding: 4px 5px;
+      color: #936000;
+      background: none;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .inline-btn:hover { text-decoration: underline; }
+    .detail-row td { background: #FBFCFE; white-space: normal; }
+    .detail-box { padding: 8px; }
+    .detail-meta { color: #536176; font-size: 13px; line-height: 1.9; }
+    .history {
+      list-style: none;
+      margin: 12px 0 0;
+      padding: 0;
+      border-left: 2px solid #E7C890;
+    }
+    .history li { position: relative; padding: 0 0 17px 20px; }
+    .history li:last-child { padding-bottom: 0; }
+    .history li::before {
+      content: "";
+      position: absolute;
+      top: 5px;
+      left: -6px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+    .history-time { color: #68788C; font-size: 12px; }
+    .history-text { color: #354356; font-size: 13px; line-height: 1.7; }
+    .dialog-body { padding: 18px 23px; max-height: 73vh; overflow: auto; }
+    .field-label {
+      margin: 4px 0 9px;
+      color: #526074;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .required { color: #B83445; }
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 105px 1fr;
+      gap: 12px;
+      font-size: 14px;
+    }
+    .profile-grid dt { color: #68788C; }
+    .profile-grid dd { margin: 0; }
+
+    @media (max-width: 1050px) {
+      .sidebar { width: 205px; flex-basis: 205px; }
+      .module { gap: 13px; }
+      .content { padding: 22px 18px; }
+      .grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+    }
+    @media (max-width: 720px) {
+      .topbar { position: static; flex-wrap: wrap; }
+      .brand-main { font-size: 15px; }
+      .identity-select { width: 100%; }
+      .shell { display: block; }
+      .sidebar {
+        width: 100%;
+        display: flex;
+        overflow-x: auto;
+        padding: 8px;
+      }
+      .sidebar-heading, .sidebar-note { display: none; }
+      .module { flex: 0 0 auto; padding: 0 12px; }
+      .content { padding: 18px 12px; }
+      .grid, .grid.two { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+<div id="app">
+  <v-app>
+    <header class="topbar">
+      <div>
+        <div class="brand-main">主題式百億基金跨部會整合管理平台</div>
+        <div class="brand-sub">
+          <span>國發基金</span>
+          <span class="prototype-badge">雛型註記</span>
+          <em>內部管理系統</em>
+        </div>
+      </div>
+      <v-select
+        class="identity-select"
+        v-model="actorId"
+        :items="actors"
+        item-title="label"
+        item-value="id"
+        variant="outlined"
+        density="compact"
+        hide-details
+        bg-color="white"
+        aria-label="切換模擬登入身分"
+      ></v-select>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar" aria-label="系統功能模組">
+        <div class="sidebar-heading">系統功能模組</div>
+        <div
+          v-for="(item,index) in modules"
+          :key="item"
+          class="module"
+          :class="{active:index===5}"
+        >
+          <i :class="'mdi ' + moduleIcons[index]" aria-hidden="true"></i>
+          <span>{{ item }}</span>
+        </div>
+        <div class="sidebar-note">
+          <span class="prototype-badge">雛型註記</span>
+          重新整理後，雛型操作資料將還原；不連接正式系統。
+        </div>
+      </aside>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">權限管理模組</div>
+            <h1>權限管理</h1>
+            <div class="subtle">
+              目前身分：{{ actor.label }}｜
+              查詢範圍：{{ isPlatform ? '全部帳號' : actor.scheme }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 已移除獨立「權限清單」頁籤 -->
+        <v-tabs v-model="tab" color="brown" show-arrows>
+          <v-tab value="accounts">帳號管理</v-tab>
+          <v-tab v-if="isPlatform" value="audit">異動及登入紀錄</v-tab>
+          <v-tab value="profile">個人設定</v-tab>
+        </v-tabs>
+
+        <!-- 帳號管理：全角色查詢；只有系統管理人員可以異動 -->
+        <template v-if="tab==='accounts'">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>帳號管理</h2>
+                <div class="subtle">
+                  {{ isSys
+                    ? '查詢帳號，並辦理建立、維護、停用與重新啟用。'
+                    : '依可見範圍查詢帳號；此身分不具帳號異動權限。' }}
+                </div>
+              </div>
+              <div class="actions">
+                <v-btn
+                  variant="outlined"
+                  color="#C47700"
+                  prepend-icon="mdi-download"
+                  @click="exportNotice"
+                >匯出帳號清單</v-btn>
+                <v-btn
+                  v-if="isSys"
+                  color="#C47700"
+                  prepend-icon="mdi-account-plus"
+                  @click="openCreate"
+                >新增帳號</v-btn>
+              </div>
+            </div>
+
+            <div class="grid">
+              <v-text-field
+                v-model="accountFilter.text"
+                label="帳號／姓名"
+                variant="outlined"
+                density="compact"
+                hide-details
+                clearable
+              ></v-text-field>
+              <v-select
+                v-model="accountFilter.unit"
+                :items="accountUnits"
+                label="單位"
+                variant="outlined"
+                density="compact"
+                hide-details
+              ></v-select>
+              <v-select
+                v-model="accountFilter.role"
+                :items="roleFilterItems"
+                label="角色"
+                variant="outlined"
+                density="compact"
+                hide-details
+              ></v-select>
+              <v-select
+                v-model="accountFilter.scheme"
+                :items="accountSchemes"
+                label="方案別"
+                variant="outlined"
+                density="compact"
+                hide-details
+              ></v-select>
+              <v-select
+                v-model="accountFilter.status"
+                :items="['全部','啟用','停用','鎖定']"
+                label="帳號狀態"
+                variant="outlined"
+                density="compact"
+                hide-details
+              ></v-select>
+            </div>
+
+            <div class="actions" style="margin-top:16px">
+              <v-btn color="#C47700" @click="applyAccountFilter">查詢</v-btn>
+              <v-btn variant="outlined" @click="clearAccountFilter">清除條件</v-btn>
+            </div>
+
+            <div class="hint">
+              <strong>雛型註記</strong>
+              帳號匯出格式尚待確認，此版不產製下載檔案。
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <h2>
+                帳號列表
+                <span class="subtle">（{{ filteredAccounts.length }} 筆）</span>
+              </h2>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>帳號</th>
+                    <th>姓名</th>
+                    <th>單位</th>
+                    <th>角色</th>
+                    <th>方案別</th>
+                    <th>狀態</th>
+                    <th>最後登入時間</th>
+                    <th v-if="isSys">操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="u in filteredAccounts" :key="u.id">
+                    <td>{{ u.account }}</td>
+                    <td>{{ u.name }}</td>
+                    <td>{{ u.unit }}</td>
+                    <td>{{ roleName(u.role) }}</td>
+                    <td class="wrap">{{ u.schemes.join('、') || '—' }}</td>
+                    <td>
+                      <span class="tag" :class="statusClass(u.status)">
+                        {{ u.status }}
+                      </span>
+                    </td>
+                    <td>{{ u.lastLogin || '尚無紀錄' }}</td>
+                    <td v-if="isSys">
+                      <button class="inline-btn" @click="openEdit(u)">編輯</button>
+                      <button
+                        v-if="u.status==='啟用'"
+                        class="inline-btn"
+                        @click="openAction('停用',u)"
+                      >停用</button>
+                      <button
+                        v-if="u.status==='停用'"
+                        class="inline-btn"
+                        @click="openAction('重新啟用',u)"
+                      >重新啟用</button>
+                      <button
+                        v-if="u.status==='鎖定'"
+                        class="inline-btn"
+                        @click="openAction('解除鎖定',u)"
+                      >解除鎖定</button>
+                      <button
+                        class="inline-btn"
+                        @click="openAction('重設密碼',u)"
+                      >重設密碼</button>
+                    </td>
+                  </tr>
+                  <tr v-if="!filteredAccounts.length">
+                    <td :colspan="isSys ? 8 : 7" class="empty">
+                      查無符合條件的帳號
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </template>
+
+        <!-- 異動及登入紀錄 -->
+        <template v-if="tab==='audit' && isPlatform">
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <h2>異動及登入紀錄</h2>
+                <div class="subtle">
+                  分別檢視帳號／權限異動歷程與登入／安全事件。
+                </div>
+              </div>
+            </div>
+            <v-tabs v-model="auditTab" color="brown" show-arrows>
+              <v-tab value="changes">
+                帳號／權限異動紀錄
+                <span
+                  v-if="isManager && pendingChanges.length"
+                  class="tag amber"
+                  style="margin-left:8px"
+                >{{ pendingChanges.length }} 待確認</span>
+              </v-tab>
+              <v-tab value="logins">登入／安全紀錄</v-tab>
+            </v-tabs>
+            <div class="hint">
+              <strong>雛型註記</strong>
+              切換模擬身分不是真實登入，因此不會自動產生登入紀錄。
+            </div>
+          </section>
+
+          <template v-if="auditTab==='changes'">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>帳號／權限異動紀錄</h2>
+                  <div class="subtle">
+                    展開可查看申請、審核及生效歷程。
+                  </div>
+                </div>
+              </div>
+              <div class="grid">
+                <v-text-field
+                  v-model="changeFilter.from"
+                  type="date"
+                  label="起始日期"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                ></v-text-field>
+                <v-text-field
+                  v-model="changeFilter.to"
+                  type="date"
+                  label="結束日期"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                ></v-text-field>
+                <v-text-field
+                  v-model="changeFilter.keyword"
+                  label="紀錄編號／目標帳號／操作人"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                ></v-text-field>
+                <v-select
+                  v-model="changeFilter.status"
+                  :items="['全部','待確認','已生效','已退回','生效失敗','已完成']"
+                  label="處理狀態"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                ></v-select>
+              </div>
+              <div class="actions" style="margin-top:16px">
+                <v-btn color="#C47700" @click="applyChangeFilter">查詢</v-btn>
+                <v-btn variant="outlined" @click="clearChangeFilter">
+                  清除條件
+                </v-btn>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h2>
+                  紀錄列表
+                  <span class="subtle">（{{ filteredChanges.length }} 筆）</span>
+                </h2>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>紀錄編號</th>
+                      <th>時間</th>
+                      <th>異動類型</th>
+                      <th>目標帳號／姓名</th>
+                      <th>操作人</th>
+                      <th>處理狀態</th>
+                      <th>歷程／操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template v-for="c in filteredChanges" :key="c.id">
+                      <tr>
+                        <td>{{ c.id }}</td>
+                        <td>{{ c.time }}</td>
+                        <td>{{ c.type }}</td>
+                        <td>{{ c.account }}／{{ c.name }}</td>
+                        <td>{{ c.operator }}</td>
+                        <td>
+                          <span
+                            class="tag"
+                            :class="changeStatusClass(c.status)"
+                          >{{ c.status }}</span>
+                        </td>
+                        <td>
+                          <button
+                            class="inline-btn"
+                            :aria-expanded="expandedChange===c.id"
+                            @click="expandedChange =
+                              expandedChange===c.id ? null : c.id"
+                          >
+                            {{ expandedChange===c.id ? '收合歷程' : '查看歷程' }}
+                          </button>
+                          <template v-if="isManager && c.status==='待確認'">
+                            <button
+                              class="inline-btn"
+                              @click="reviewChange(c,'確認')"
+                            >確認</button>
+                            <button
+                              class="inline-btn"
+                              @click="reviewChange(c,'退回')"
+                            >退回</button>
+                          </template>
+                        </td>
+                      </tr>
+                      <tr v-if="expandedChange===c.id" class="detail-row">
+                        <td colspan="7">
+                          <div class="detail-box">
+                            <h3>異動內容</h3>
+                            <div class="detail-meta">
+                              <div>
+                                <strong>異動摘要：</strong>{{ c.summary }}
+                              </div>
+                              <div v-if="c.fileName">
+                                <strong>資通系統帳號申請表：</strong>
+                                {{ c.fileName }}
+                              </div>
+                              <div v-if="c.reviewNote">
+                                <strong>退回原因：</strong>{{ c.reviewNote }}
+                              </div>
+                            </div>
+                            <h3 style="margin-top:18px">處理歷程</h3>
+                            <ol class="history">
+                              <li v-for="(step,index) in c.steps" :key="index">
+                                <div class="history-time">
+                                  {{ step.time }}｜{{ step.actor }}
+                                </div>
+                                <div class="history-text">
+                                  <strong>{{ step.title }}</strong>
+                                  <span v-if="step.detail">
+                                    ｜{{ step.detail }}
+                                  </span>
+                                </div>
+                              </li>
+                            </ol>
+                          </div>
+                        </td>
+                      </tr>
+                    </template>
+                    <tr v-if="!filteredChanges.length">
+                      <td colspan="7" class="empty">查無符合條件的異動紀錄</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </template>
+
+          <template v-if="auditTab==='logins'">
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>登入／安全紀錄</h2>
+                  <div class="subtle">
+                    呈現登入成功、登入失敗及帳號鎖定事件。
+                  </div>
+                </div>
+              </div>
+              <div class="grid">
+                <v-text-field
+                  v-model="loginFilter.from"
+                  type="date"
+                  label="起始日期"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                ></v-text-field>
+                <v-text-field
+                  v-model="loginFilter.to"
+                  type="date"
+                  label="結束日期"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                ></v-text-field>
+                <v-text-field
+                  v-model="loginFilter.account"
+                  label="帳號"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  clearable
+                ></v-text-field>
+                <v-select
+                  v-model="loginFilter.type"
+                  :items="['全部','登入成功','登入失敗','帳號鎖定']"
+                  label="事件類型"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                ></v-select>
+              </div>
+              <div class="actions" style="margin-top:16px">
+                <v-btn color="#C47700" @click="applyLoginFilter">查詢</v-btn>
+                <v-btn variant="outlined" @click="clearLoginFilter">
+                  清除條件
+                </v-btn>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <h2>
+                  登入事件
+                  <span class="subtle">
+                    （{{ filteredLoginEvents.length }} 筆）
+                  </span>
+                </h2>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>時間</th>
+                      <th>帳號</th>
+                      <th>事件類型</th>
+                      <th>結果／原因</th>
+                      <th>來源 IP</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="e in filteredLoginEvents" :key="e.id">
+                      <td>{{ e.time }}</td>
+                      <td>{{ e.account }}</td>
+                      <td>
+                        <span
+                          class="tag"
+                          :class="e.type==='登入成功' ? 'green' : 'red'"
+                        >{{ e.type }}</span>
+                      </td>
+                      <td class="wrap">{{ e.detail }}</td>
+                      <td>{{ e.ip }}</td>
+                    </tr>
+                    <tr v-if="!filteredLoginEvents.length">
+                      <td colspan="5" class="empty">
+                        查無符合條件的登入紀錄
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>雛型測試工具：產生登入事件</h2>
+                  <div class="subtle">供驗證列表及帳號狀態聯動。</div>
+                </div>
+              </div>
+              <div class="actions">
+                <v-select
+                  v-model="testAccount"
+                  :items="users"
+                  item-title="account"
+                  item-value="account"
+                  label="選擇示範帳號"
+                  variant="outlined"
+                  density="compact"
+                  hide-details
+                  style="min-width:220px;max-width:260px"
+                ></v-select>
+                <v-btn
+                  variant="outlined"
+                  color="green"
+                  @click="simulateLogin('登入成功')"
+                >模擬成功</v-btn>
+                <v-btn
+                  variant="outlined"
+                  color="orange"
+                  @click="simulateLogin('登入失敗')"
+                >模擬失敗</v-btn>
+                <v-btn
+                  variant="outlined"
+                  color="red"
+                  @click="simulateLogin('帳號鎖定')"
+                >模擬鎖定</v-btn>
+              </div>
+              <div class="hint">
+                <strong>雛型註記</strong>
+                此區非正式功能；不執行真實驗證。登入失敗幾次後鎖定
+                仍待確認，因此此處不模擬自動鎖定門檻。
+              </div>
+            </section>
+          </template>
+        </template>
+
+        <!-- 個人設定 -->
+        <template v-if="tab==='profile'">
+          <section class="panel">
+            <div class="panel-head"><h2>個人帳號資訊</h2></div>
+            <dl class="profile-grid">
+              <dt>帳號</dt><dd>{{ actor.account }}</dd>
+              <dt>姓名</dt><dd>{{ actor.name }}</dd>
+              <dt>單位</dt><dd>{{ actor.unit }}</dd>
+              <dt>角色</dt><dd>{{ roleName(actor.role) }}</dd>
+              <dt>方案範圍</dt><dd>{{ actor.scheme || '—' }}</dd>
+            </dl>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><h2>變更密碼</h2></div>
+            <div style="max-width:500px">
+              <v-text-field
+                v-model="passwordForm.old"
+                type="password"
+                label="舊密碼 *"
+                variant="outlined"
+              ></v-text-field>
+              <v-text-field
+                v-model="passwordForm.next"
+                type="password"
+                label="新密碼 *"
+                variant="outlined"
+              ></v-text-field>
+              <v-text-field
+                v-model="passwordForm.confirm"
+                type="password"
+                label="確認新密碼 *"
+                variant="outlined"
+              ></v-text-field>
+              <v-btn color="#C47700" @click="changePassword">
+                儲存密碼
+              </v-btn>
+            </div>
+            <div class="hint">
+              <strong>雛型註記</strong>
+              示範舊密碼為 Demo1234!；新密碼暫以至少 8 碼，
+              且包含英文字母與數字檢核。本版不儲存真實密碼。
+            </div>
+          </section>
+        </template>
+      </main>
+    </div>
+
+    <!-- 新增／編輯帳號 -->
+    <v-dialog v-model="formDialog" max-width="760" persistent>
+      <v-card>
+        <v-card-title style="padding:20px 23px 8px;color:#11144F">
+          {{ editingId ? '編輯帳號' : '新增帳號' }}
+        </v-card-title>
+        <div class="dialog-body">
+          <v-alert
+            v-if="formError"
+            type="error"
+            variant="tonal"
+            density="compact"
+            style="margin-bottom:15px"
+          >{{ formError }}</v-alert>
+
+          <div class="grid two">
+            <v-text-field
+              v-model="form.name"
+              label="姓名 *"
+              variant="outlined"
+              density="compact"
+            ></v-text-field>
+            <v-text-field
+              v-model="form.account"
+              label="帳號 *"
+              :readonly="!!editingId"
+              variant="outlined"
+              density="compact"
+            ></v-text-field>
+            <v-select
+              :model-value="form.unit"
+              @update:model-value="setFormUnit"
+              :items="units"
+              label="單位 *"
+              variant="outlined"
+              density="compact"
+            ></v-select>
+            <v-text-field
+              v-model="form.email"
+              type="email"
+              label="聯絡 Email *"
+              variant="outlined"
+              density="compact"
+            ></v-text-field>
+            <v-select
+              v-model="form.role"
+              :items="roles"
+              item-title="title"
+              item-value="value"
+              label="角色 *"
+              variant="outlined"
+              density="compact"
+            ></v-select>
+            <v-select
+              v-if="form.role==='staff' || form.role==='supervisor'"
+              v-model="form.schemes"
+              :items="schemesForUnit(form.unit)"
+              label="方案別 *"
+              multiple
+              chips
+              closable-chips
+              variant="outlined"
+              density="compact"
+            ></v-select>
+            <v-select
+              v-model="form.status"
+              :items="['啟用','停用']"
+              label="帳號狀態 *"
+              variant="outlined"
+              density="compact"
+            ></v-select>
+          </div>
+
+          <div class="field-label">
+            資通系統帳號申請表 <span class="required">*</span>
+          </div>
+          <v-file-input
+            v-model="formFile"
+            label="選擇申請表檔案"
+            accept=".pdf,.doc,.docx"
+            prepend-icon="mdi-paperclip"
+            variant="outlined"
+            density="compact"
+            show-size
+          ></v-file-input>
+          <div class="hint">
+            <strong>雛型註記</strong>
+            僅記錄示範檔名，不會將檔案上傳至伺服器。
+          </div>
+        </div>
+        <v-card-actions style="padding:12px 23px 20px">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="formDialog=false">取消</v-btn>
+          <v-btn color="#C47700" @click="submitForm">送出待確認</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 停用／重新啟用：維持附件與審核流程 -->
+    <v-dialog v-model="actionDialog" max-width="530" persistent>
+      <v-card>
+        <v-card-title style="padding:20px 23px 8px;color:#11144F">
+          {{ actionType }}
+        </v-card-title>
+        <div class="dialog-body">
+          <p>
+            目標帳號：
+            <strong>
+              {{ actionTarget?.account }}／{{ actionTarget?.name }}
+            </strong>
+          </p>
+          <v-alert
+            v-if="actionError"
+            type="error"
+            variant="tonal"
+            density="compact"
+            style="margin-bottom:12px"
+          >{{ actionError }}</v-alert>
+          <div class="field-label">
+            資通系統帳號申請表 <span class="required">*</span>
+          </div>
+          <v-file-input
+            v-model="actionFile"
+            label="選擇申請表檔案"
+            accept=".pdf,.doc,.docx"
+            prepend-icon="mdi-paperclip"
+            variant="outlined"
+            density="compact"
+            show-size
+          ></v-file-input>
+          <div class="subtle">
+            送出後須由平台管理人員確認；確認前帳號狀態不變。
+          </div>
+        </div>
+        <v-card-actions style="padding:0 23px 20px">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="actionDialog=false">取消</v-btn>
+          <v-btn color="#C47700" @click="submitAction">
+            送出待確認
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 解除鎖定／重設密碼：再次確認即可 -->
+    <v-dialog v-model="quickConfirmDialog" max-width="500" persistent>
+      <v-card>
+        <v-card-title style="padding:20px 23px 8px;color:#11144F">
+          再次確認：{{ quickActionType }}
+        </v-card-title>
+        <div class="dialog-body">
+          <p style="margin-top:0">
+            確定要對
+            <strong>
+              {{ quickTarget?.account }}／{{ quickTarget?.name }}
+            </strong>
+            執行「{{ quickActionType }}」嗎？
+          </p>
+          <div v-if="quickActionType==='解除鎖定'" class="subtle">
+            確認後將立即把帳號狀態由「鎖定」改為「啟用」。
+          </div>
+          <div v-else class="subtle">
+            確認後留下重設密碼操作紀錄；雛型不產生、儲存
+            或寄送實際密碼。
+          </div>
+          <div class="hint">
+            <strong>雛型註記</strong>
+            此操作不要求申請表，也不進入待審核流程。
+          </div>
+        </div>
+        <v-card-actions style="padding:0 23px 20px">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="quickConfirmDialog=false">
+            取消
+          </v-btn>
+          <v-btn color="#C47700" @click="confirmQuickAction">
+            確認執行
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- 退回原因 -->
+    <v-dialog v-model="rejectDialog" max-width="500" persistent>
+      <v-card>
+        <v-card-title style="padding:20px 23px 8px;color:#11144F">
+          退回異動申請
+        </v-card-title>
+        <div class="dialog-body">
+          <div class="subtle" style="margin-bottom:12px">
+            申請編號：{{ reviewingChange?.id }}｜
+            目標帳號：{{ reviewingChange?.account }}
+          </div>
+          <v-textarea
+            v-model="rejectReason"
+            label="退回原因 *"
+            variant="outlined"
+            rows="3"
+            counter="200"
+          ></v-textarea>
+          <v-alert
+            v-if="rejectError"
+            type="error"
+            variant="tonal"
+            density="compact"
+          >{{ rejectError }}</v-alert>
+        </div>
+        <v-card-actions style="padding:0 23px 20px">
+          <v-spacer></v-spacer>
+          <v-btn variant="text" @click="rejectDialog=false">
+            取消
+          </v-btn>
+          <v-btn color="#C47700" @click="confirmReject">
+            確認退回
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-snackbar v-model="snackbar" :timeout="4500">
+      {{ snackText }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="snackbar=false">關閉</v-btn>
+      </template>
+    </v-snackbar>
+  </v-app>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.global.prod.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vuetify@3.7.12/dist/vuetify.min.js"></script>
+
+<script>
+const { createApp } = Vue;
+const { createVuetify } = Vuetify;
+
+const SCHEMES = [
+  { unit:"經濟部中小及新創企業署", name:"中小企業實施方案" },
+  { unit:"經濟部產業發展署", name:"策略性服務業實施方案" },
+  { unit:"經濟部產業發展署", name:"策略性製造業實施方案" },
+  { unit:"數位發展部數位產業署", name:"AI新創實施方案" },
+  { unit:"環境部", name:"綠色成長淨零產業實施方案" },
+  { unit:"國家科學及技術委員會", name:"智慧機器人投資實施方案" },
+  { unit:"文化部", name:"文化創意產業實施方案" }
+];
+
+const pad = n => String(n).padStart(2,"0");
+function demoTime(daysAgo, hour, minute) {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  d.setHours(hour, minute, 0, 0);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} `+
+         `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+const demoDay = daysAgo => demoTime(daysAgo, 0, 0).slice(0,10);
+const demoRequestId = (daysAgo, no) =>
+  `REQ-${demoDay(daysAgo).replaceAll("-","")}-${pad(no).padStart(3,"0")}`;
+
+createApp({
+  data() {
+    return {
+      modules:[
+        "資料匯入模組","投資案件管理模組","案源追蹤管理模組",
+        "報表查詢模組","AI查詢模組","權限管理模組"
+      ],
+      moduleIcons:[
+        "mdi-database-import-outline","mdi-briefcase-outline",
+        "mdi-source-branch","mdi-chart-box-outline",
+        "mdi-magnify","mdi-shield-account-outline"
+      ],
+      roles:[
+        { title:"百億平台系統管理人員", value:"sys" },
+        { title:"百億平台管理人員", value:"manager" },
+        { title:"百億方案主管", value:"supervisor" },
+        { title:"百億方案經辦", value:"staff" }
+      ],
+      actors:[
+        {
+          id:"sys", label:"國發基金｜系統管理人員",
+          account:"demo.sys", name:"示範系統管理員",
+          unit:"國發基金", role:"sys", scheme:""
+        },
+        {
+          id:"manager", label:"國發基金｜平台管理人員",
+          account:"demo.manager", name:"示範平台管理員",
+          unit:"國發基金", role:"manager", scheme:""
+        },
+        {
+          id:"supervisor", label:"AI新創方案｜主管",
+          account:"demo.supervisor", name:"示範方案主管",
+          unit:"數位發展部數位產業署", role:"supervisor",
+          scheme:"AI新創實施方案"
+        },
+        {
+          id:"staff", label:"AI新創方案｜經辦",
+          account:"demo.staff", name:"示範方案經辦",
+          unit:"數位發展部數位產業署", role:"staff",
+          scheme:"AI新創實施方案"
+        },
+        {
+          id:"green-supervisor", label:"綠色成長方案｜主管",
+          account:"demo.green.supervisor", name:"示範淨零主管",
+          unit:"環境部", role:"supervisor",
+          scheme:"綠色成長淨零產業實施方案"
+        }
+      ],
+      actorId:"sys",
+      tab:"accounts",
+      auditTab:"changes",
+
+      users:[
+        {
+          id:1, account:"demo.sys", name:"示範系統管理員",
+          unit:"國發基金", email:"sys@demo.example",
+          role:"sys", schemes:[], status:"啟用",
+          lastLogin:demoTime(0,9,12)
+        },
+        {
+          id:2, account:"demo.manager", name:"示範平台管理員",
+          unit:"國發基金", email:"manager@demo.example",
+          role:"manager", schemes:[], status:"啟用",
+          lastLogin:demoTime(0,8,36)
+        },
+        {
+          id:3, account:"demo.supervisor", name:"示範方案主管",
+          unit:"數位發展部數位產業署",
+          email:"supervisor@demo.example",
+          role:"supervisor", schemes:["AI新創實施方案"],
+          status:"啟用", lastLogin:demoTime(1,15,20)
+        },
+        {
+          id:4, account:"demo.staff", name:"示範方案經辦",
+          unit:"數位發展部數位產業署",
+          email:"staff@demo.example",
+          role:"staff", schemes:["AI新創實施方案"],
+          status:"啟用", lastLogin:demoTime(1,10,4)
+        },
+        {
+          id:5, account:"demo.sme", name:"示範中小企業經辦",
+          unit:"經濟部中小及新創企業署",
+          email:"sme@demo.example",
+          role:"staff", schemes:["中小企業實施方案"],
+          status:"啟用", lastLogin:demoTime(3,14,0)
+        },
+        {
+          id:6, account:"demo.service", name:"示範服務業主管",
+          unit:"經濟部產業發展署",
+          email:"service@demo.example",
+          role:"supervisor",
+          schemes:["策略性服務業實施方案"],
+          status:"停用", lastLogin:""
+        },
+        {
+          id:7, account:"demo.green", name:"示範淨零經辦",
+          unit:"環境部", email:"green@demo.example",
+          role:"staff",
+          schemes:["綠色成長淨零產業實施方案"],
+          status:"鎖定", lastLogin:demoTime(2,11,30)
+        },
+        {
+          id:8, account:"demo.green.supervisor",
+          name:"示範淨零主管",
+          unit:"環境部",
+          email:"green.supervisor@demo.example",
+          role:"supervisor",
+          schemes:["綠色成長淨零產業實施方案"],
+          status:"啟用", lastLogin:demoTime(1,9,40)
+        }
+      ],
+
+      accountFilter:{
+        text:"", unit:"全部", role:"全部",
+        scheme:"全部", status:"全部"
+      },
+      accountApplied:{
+        text:"", unit:"全部", role:"全部",
+        scheme:"全部", status:"全部"
+      },
+
+      changeFilter:{ from:"", to:"", keyword:"", status:"全部" },
+      changeApplied:{ from:"", to:"", keyword:"", status:"全部" },
+      expandedChange:null,
+      changes:[
+        {
+          id:demoRequestId(0,3),
+          time:demoTime(0,10,5),
+          type:"帳號重新啟用",
+          account:"demo.service",
+          name:"示範服務業主管",
+          operator:"demo.sys",
+          targetId:6,
+          payload:null,
+          fileName:"示範申請表-重新啟用.pdf",
+          summary:"帳號狀態：停用 → 啟用",
+          status:"待確認",
+          reviewNote:"",
+          steps:[
+            {
+              time:demoTime(0,10,5),
+              actor:"demo.sys",
+              title:"送出申請",
+              detail:"附申請表；帳號仍為停用"
+            }
+          ]
+        },
+        {
+          id:demoRequestId(1,2),
+          time:demoTime(1,14,30),
+          type:"帳號／權限維護",
+          account:"demo.staff",
+          name:"示範方案經辦",
+          operator:"demo.sys",
+          targetId:4,
+          payload:null,
+          fileName:"示範申請表-權限維護.pdf",
+          summary:"角色：百億方案經辦 → 百億方案主管（申請未生效）",
+          status:"已退回",
+          reviewNote:"申請資料待補正（示範）。",
+          steps:[
+            {
+              time:demoTime(1,14,30),
+              actor:"demo.sys",
+              title:"送出申請",
+              detail:"角色異動待確認"
+            },
+            {
+              time:demoTime(1,15,10),
+              actor:"demo.manager",
+              title:"退回申請",
+              detail:"申請資料待補正；原角色維持不變"
+            }
+          ]
+        },
+        {
+          id:demoRequestId(2,1),
+          time:demoTime(2,9,10),
+          type:"帳號停用",
+          account:"demo.service",
+          name:"示範服務業主管",
+          operator:"demo.sys",
+          targetId:6,
+          payload:null,
+          fileName:"示範申請表-停用.pdf",
+          summary:"帳號狀態：啟用 → 停用",
+          status:"已生效",
+          reviewNote:"",
+          steps:[
+            {
+              time:demoTime(2,9,10),
+              actor:"demo.sys",
+              title:"送出申請",
+              detail:"帳號狀態：啟用 → 停用；尚未生效"
+            },
+            {
+              time:demoTime(2,10,0),
+              actor:"demo.manager",
+              title:"確認申請",
+              detail:"同意停用"
+            },
+            {
+              time:demoTime(2,10,0),
+              actor:"系統",
+              title:"異動生效",
+              detail:"帳號狀態：啟用 → 停用"
+            }
+          ]
+        }
+      ],
+      nextRequestNo:4,
+      nextQuickNo:1,
+
+      loginFilter:{ from:"", to:"", account:"", type:"全部" },
+      loginApplied:{ from:"", to:"", account:"", type:"全部" },
+      loginEvents:[
+        {
+          id:1, time:demoTime(0,9,12),
+          account:"demo.sys", type:"登入成功",
+          detail:"驗證成功", ip:"192.0.2.10"
+        },
+        {
+          id:2, time:demoTime(0,8,36),
+          account:"demo.manager", type:"登入成功",
+          detail:"驗證成功", ip:"192.0.2.11"
+        },
+        {
+          id:3, time:demoTime(2,11,45),
+          account:"demo.green", type:"帳號鎖定",
+          detail:"登入驗證失敗後鎖定；門檻待確認",
+          ip:"192.0.2.12"
+        },
+        {
+          id:4, time:demoTime(2,11,44),
+          account:"demo.green", type:"登入失敗",
+          detail:"驗證失敗（示範）", ip:"192.0.2.12"
+        }
+      ],
+      testAccount:"demo.staff",
+
+      formDialog:false,
+      editingId:null,
+      form:{},
+      formFile:[],
+      formError:"",
+
+      actionDialog:false,
+      actionType:"",
+      actionTarget:null,
+      actionFile:[],
+      actionError:"",
+
+      quickConfirmDialog:false,
+      quickActionType:"",
+      quickTarget:null,
+
+      rejectDialog:false,
+      reviewingChange:null,
+      rejectReason:"",
+      rejectError:"",
+
+      passwordForm:{ old:"", next:"", confirm:"" },
+      snackbar:false,
+      snackText:""
+    };
+  },
+
+  computed:{
+    actor() {
+      return this.actors.find(x => x.id===this.actorId);
+    },
+    isSys() {
+      return this.actor.role==="sys";
+    },
+    isManager() {
+      return this.actor.role==="manager";
+    },
+    isPlatform() {
+      return this.isSys || this.isManager;
+    },
+    units() {
+      return ["國發基金", ...new Set(SCHEMES.map(x => x.unit))];
+    },
+    roleFilterItems() {
+      return ["全部", ...this.roles.map(x => x.title)];
+    },
+    visibleUsers() {
+      if (this.isPlatform) return this.users;
+      return this.users.filter(u =>
+        u.unit===this.actor.unit &&
+        u.schemes.includes(this.actor.scheme)
+      );
+    },
+    accountUnits() {
+      return ["全部", ...new Set(this.visibleUsers.map(u => u.unit))];
+    },
+    accountSchemes() {
+      const list=this.visibleUsers
+        .filter(u =>
+          this.accountFilter.unit==="全部" ||
+          u.unit===this.accountFilter.unit
+        )
+        .flatMap(u => u.schemes);
+      return ["全部", ...new Set(list)];
+    },
+    filteredAccounts() {
+      const f=this.accountApplied;
+      const text=(f.text || "").trim().toLowerCase();
+      return this.visibleUsers.filter(u =>
+        (!text ||
+          (u.account+" "+u.name).toLowerCase().includes(text)) &&
+        (f.unit==="全部" || u.unit===f.unit) &&
+        (f.role==="全部" || this.roleName(u.role)===f.role) &&
+        (f.scheme==="全部" || u.schemes.includes(f.scheme)) &&
+        (f.status==="全部" || u.status===f.status)
+      );
+    },
+    pendingChanges() {
+      return this.changes.filter(c => c.status==="待確認");
+    },
+    filteredChanges() {
+      const f=this.changeApplied;
+      const keyword=(f.keyword || "").trim().toLowerCase();
+      return this.changes.filter(c =>
+        (!f.from || c.time.slice(0,10)>=f.from) &&
+        (!f.to || c.time.slice(0,10)<=f.to) &&
+        (!keyword ||
+          (c.id+" "+c.account+" "+c.name+" "+c.operator)
+            .toLowerCase().includes(keyword)) &&
+        (f.status==="全部" || c.status===f.status)
+      ).sort((a,b) => b.time.localeCompare(a.time));
+    },
+    filteredLoginEvents() {
+      const f=this.loginApplied;
+      const account=(f.account || "").trim().toLowerCase();
+      return this.loginEvents.filter(e =>
+        (!f.from || e.time.slice(0,10)>=f.from) &&
+        (!f.to || e.time.slice(0,10)<=f.to) &&
+        (!account || e.account.toLowerCase().includes(account)) &&
+        (f.type==="全部" || e.type===f.type)
+      ).sort((a,b) => b.time.localeCompare(a.time));
+    }
+  },
+
+  watch:{
+    actorId() {
+      this.tab="accounts";
+      this.auditTab="changes";
+      this.formDialog=false;
+      this.actionDialog=false;
+      this.quickConfirmDialog=false;
+      this.rejectDialog=false;
+      this.passwordForm={old:"",next:"",confirm:""};
+      this.clearAccountFilter();
+      this.toast("已切換模擬身分；帳號可見範圍已更新。");
+    },
+    "accountFilter.unit"() {
+      if (!this.accountSchemes.includes(this.accountFilter.scheme)) {
+        this.accountFilter.scheme="全部";
+      }
+    }
+  },
+
+  methods:{
+    roleName(role) {
+      return this.roles.find(x => x.value===role)?.title || role;
+    },
+    statusClass(status) {
+      return status==="啟用" ? "green" :
+             status==="停用" ? "gray" : "red";
+    },
+    changeStatusClass(status) {
+      return status==="已生效" || status==="已完成" ? "green" :
+             status==="待確認" ? "amber" :
+             status==="已退回" ? "gray" : "red";
+    },
+    schemesForUnit(unit) {
+      return SCHEMES.filter(x => x.unit===unit).map(x => x.name);
+    },
+    toast(message) {
+      this.snackText=message;
+      this.snackbar=true;
+    },
+    now() {
+      const d=new Date();
+      return `${d.getFullYear()}-${pad(d.getMonth()+1)}-`+
+             `${pad(d.getDate())} ${pad(d.getHours())}:`+
+             `${pad(d.getMinutes())}`;
+    },
+    validDateRange(from,to) {
+      if (from && to && from>to) {
+        this.toast("起始日期不可晚於結束日期。");
+        return false;
+      }
+      return true;
+    },
+    applyAccountFilter() {
+      this.accountApplied={...this.accountFilter};
+    },
+    clearAccountFilter() {
+      this.accountFilter={
+        text:"",unit:"全部",role:"全部",
+        scheme:"全部",status:"全部"
+      };
+      this.accountApplied={...this.accountFilter};
+    },
+    applyChangeFilter() {
+      if (!this.validDateRange(
+        this.changeFilter.from,this.changeFilter.to
+      )) return;
+      this.changeApplied={...this.changeFilter};
+    },
+    clearChangeFilter() {
+      this.changeFilter={
+        from:"",to:"",keyword:"",status:"全部"
+      };
+      this.changeApplied={...this.changeFilter};
+    },
+    applyLoginFilter() {
+      if (!this.validDateRange(
+        this.loginFilter.from,this.loginFilter.to
+      )) return;
+      this.loginApplied={...this.loginFilter};
+    },
+    clearLoginFilter() {
+      this.loginFilter={
+        from:"",to:"",account:"",type:"全部"
+      };
+      this.loginApplied={...this.loginFilter};
+    },
+    exportNotice() {
+      this.toast(
+        `雛型註記：目前查詢結果為 ${this.filteredAccounts.length} 筆；`+
+        "帳號匯出格式待確認，此版不產製檔案。"
+      );
+    },
+    blankForm() {
+      return {
+        name:"",account:"",unit:null,email:"",
+        role:null,schemes:[],status:"啟用"
+      };
+    },
+    setFormUnit(unit) {
+      this.form.unit=unit;
+      this.form.schemes=this.form.schemes.filter(s =>
+        this.schemesForUnit(unit).includes(s)
+      );
+    },
+    openCreate() {
+      if (!this.isSys) return;
+      this.editingId=null;
+      this.form=this.blankForm();
+      this.formFile=[];
+      this.formError="";
+      this.formDialog=true;
+    },
+    openEdit(u) {
+      if (!this.isSys) return;
+      this.editingId=u.id;
+      this.form={...u,schemes:[...u.schemes]};
+      this.formFile=[];
+      this.formError="";
+      this.formDialog=true;
+    },
+    selectedFile(value) {
+      return Array.isArray(value) ? value[0] : value;
+    },
+    validFile(value) {
+      const file=this.selectedFile(value);
+      return !!file &&
+        /\.(pdf|doc|docx)$/i.test(file.name || "");
+    },
+    hasPending(account) {
+      return this.pendingChanges.some(c =>
+        c.account.toLowerCase()===account.toLowerCase()
+      );
+    },
+    makeSummary(oldData,newData) {
+      if (!oldData) {
+        return `新增：${newData.account}；`+
+          `角色：${this.roleName(newData.role)}；`+
+          `單位：${newData.unit}；`+
+          `方案別：${newData.schemes.join("、") || "—"}`;
+      }
+      const fields=[
+        ["姓名",oldData.name,newData.name],
+        ["單位",oldData.unit,newData.unit],
+        ["聯絡 Email",oldData.email,newData.email],
+        [
+          "角色",
+          this.roleName(oldData.role),
+          this.roleName(newData.role)
+        ],
+        [
+          "方案別",
+          oldData.schemes.join("、") || "—",
+          newData.schemes.join("、") || "—"
+        ],
+        ["帳號狀態",oldData.status,newData.status]
+      ];
+      const differences=fields
+        .filter(([,before,after]) => before!==after)
+        .map(([name,before,after]) =>
+          `${name}：${before} → ${after}`
+        );
+      return differences.join("；") || "資料未變更";
+    },
+    queueChange(type,payload,targetId,fileName,summary) {
+      const old=this.users.find(u => u.id===targetId);
+      const time=this.now();
+      const id="REQ-"+time.slice(0,10).replaceAll("-","")+
+        "-"+String(this.nextRequestNo++).padStart(3,"0");
+      const change={
+        id,
+        time,
+        type,
+        account:payload?.account || old?.account,
+        name:payload?.name || old?.name,
+        operator:this.actor.account,
+        targetId,
+        payload,
+        fileName,
+        summary,
+        status:"待確認",
+        reviewNote:"",
+        steps:[
+          {
+            time,
+            actor:this.actor.account,
+            title:"送出申請",
+            detail:`${summary}；尚未生效`
+          }
+        ]
+      };
+      this.changes.unshift(change);
+      this.expandedChange=id;
+      this.toast(
+        `已建立 ${id}；等待平台管理人員確認，資料尚未變更。`
+      );
+    },
+    submitForm() {
+      if (!this.isSys) return;
+      const f=this.form;
+      if (
+        !f.name?.trim() ||
+        !f.account?.trim() ||
+        !f.unit ||
+        !f.email?.trim() ||
+        !f.role ||
+        !f.status
+      ) {
+        this.formError=
+          "請完整填寫姓名、帳號、單位、聯絡 Email、角色及狀態。";
+        return;
+      }
+      if (!/^[a-zA-Z0-9._-]+$/.test(f.account.trim())) {
+        this.formError=
+          "帳號僅可使用英文字母、數字、點、底線及連字號。";
+        return;
+      }
+      if (
+        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim()) ||
+        !f.email.trim().toLowerCase().endsWith("@demo.example")
+      ) {
+        this.formError=
+          "雛型請使用有效的 @demo.example 示範信箱。";
+        return;
+      }
+      if (
+        (f.role==="staff" || f.role==="supervisor") &&
+        (
+          !f.schemes.length ||
+          f.schemes.some(s =>
+            !this.schemesForUnit(f.unit).includes(s)
+          )
+        )
+      ) {
+        this.formError=
+          "方案人員須選擇至少一個與所屬單位相符的方案。";
+        return;
+      }
+      if (
+        (f.role==="sys" || f.role==="manager") &&
+        f.unit!=="國發基金"
+      ) {
+        this.formError="平台角色的單位請選擇國發基金。";
+        return;
+      }
+      if (!this.validFile(this.formFile)) {
+        this.formError=
+          "請選擇 PDF、DOC 或 DOCX 格式的資通系統帳號申請表。";
+        return;
+      }
+      const account=f.account.trim();
+      if (
+        !this.editingId &&
+        this.users.some(u =>
+          u.account.toLowerCase()===account.toLowerCase()
+        )
+      ) {
+        this.formError=
+          "帳號已存在，不可重複新增；請辦理既有帳號異動。";
+        return;
+      }
+      if (this.hasPending(account)) {
+        this.formError=
+          "此帳號已有待確認異動，請先完成審核。";
+        return;
+      }
+
+      const old=this.users.find(u => u.id===this.editingId);
+      const payload={
+        account,
+        name:f.name.trim(),
+        unit:f.unit,
+        email:f.email.trim(),
+        role:f.role,
+        schemes:
+          (f.role==="staff" || f.role==="supervisor")
+            ? [...f.schemes] : [],
+        status:f.status,
+        lastLogin:old?.lastLogin || ""
+      };
+      const summary=this.makeSummary(old,payload);
+      if (old && summary==="資料未變更") {
+        this.formError="沒有異動內容，無須送出申請。";
+        return;
+      }
+      const permissionChanged=!!old && (
+        old.role!==payload.role ||
+        old.unit!==payload.unit ||
+        old.schemes.join("|")!==payload.schemes.join("|")
+      );
+      const type=!old
+        ? "帳號建立"
+        : permissionChanged
+          ? "帳號／權限維護"
+          : "帳號維護";
+
+      this.queueChange(
+        type,
+        payload,
+        old?.id || null,
+        this.selectedFile(this.formFile).name,
+        summary
+      );
+      this.formDialog=false;
+    },
+    openAction(type,u) {
+      if (!this.isSys) return;
+      if (type==="解除鎖定" || type==="重設密碼") {
+        this.quickActionType=type;
+        this.quickTarget=u;
+        this.quickConfirmDialog=true;
+        return;
+      }
+      this.actionType=type;
+      this.actionTarget=u;
+      this.actionFile=[];
+      this.actionError="";
+      this.actionDialog=true;
+    },
+    submitAction() {
+      if (!this.isSys || !this.actionTarget) return;
+      if (!this.validFile(this.actionFile)) {
+        this.actionError=
+          "請選擇 PDF、DOC 或 DOCX 格式的資通系統帳號申請表。";
+        return;
+      }
+      const u=this.actionTarget;
+      if (this.hasPending(u.account)) {
+        this.actionError=
+          "此帳號已有待確認異動，請先完成審核。";
+        return;
+      }
+      const type=this.actionType==="停用"
+        ? "帳號停用"
+        : "帳號重新啟用";
+      this.queueChange(
+        type,
+        null,
+        u.id,
+        this.selectedFile(this.actionFile).name,
+        `帳號狀態：${u.status} → `+
+          `${type==="帳號停用" ? "停用" : "啟用"}`
+      );
+      this.actionDialog=false;
+    },
+    confirmQuickAction() {
+      if (!this.isSys || !this.quickTarget) return;
+      const u=this.users.find(x => x.id===this.quickTarget.id);
+      this.quickConfirmDialog=false;
+      if (!u) {
+        this.toast("找不到目標帳號，操作未執行。");
+        return;
+      }
+      if (
+        this.quickActionType==="解除鎖定" &&
+        u.status!=="鎖定"
+      ) {
+        this.toast("帳號目前不是鎖定狀態，無須解除鎖定。");
+        return;
+      }
+      if (this.hasPending(u.account)) {
+        this.toast("此帳號有待確認異動，請先完成審核。");
+        return;
+      }
+
+      const time=this.now();
+      const type=this.quickActionType;
+      const id="ACT-"+time.slice(0,10).replaceAll("-","")+
+        "-"+String(this.nextQuickNo++).padStart(3,"0");
+      const summary=type==="解除鎖定"
+        ? "帳號狀態：鎖定 → 啟用"
+        : "重設密碼操作已確認；不記錄密碼內容";
+      if (type==="解除鎖定") u.status="啟用";
+
+      this.changes.unshift({
+        id,
+        time,
+        type,
+        account:u.account,
+        name:u.name,
+        operator:this.actor.account,
+        targetId:u.id,
+        payload:null,
+        fileName:"",
+        summary,
+        status:"已完成",
+        reviewNote:"",
+        steps:[
+          {
+            time,
+            actor:this.actor.account,
+            title:"再次確認",
+            detail:`確認對 ${u.account} 執行${type}`
+          },
+          {
+            time,
+            actor:"系統",
+            title:"操作完成",
+            detail:type==="解除鎖定"
+              ? "帳號狀態：鎖定 → 啟用"
+              : "雛型僅示範紀錄；未產生或寄送實際密碼"
+          }
+        ]
+      });
+      this.expandedChange=id;
+      this.quickTarget=null;
+      this.toast(
+        type==="解除鎖定"
+          ? "帳號已解除鎖定，異動紀錄已更新。"
+          : "已留下重設密碼示範紀錄；未重設真實密碼。"
+      );
+    },
+    reviewChange(c,decision) {
+      if (!this.isManager || c.status!=="待確認") return;
+      if (decision==="退回") {
+        this.reviewingChange=c;
+        this.rejectReason="";
+        this.rejectError="";
+        this.rejectDialog=true;
+        return;
+      }
+
+      const time=this.now();
+      c.steps.push({
+        time,
+        actor:this.actor.account,
+        title:"確認申請",
+        detail:"同意異動；接續檢查生效結果"
+      });
+
+      const target=this.users.find(u => u.id===c.targetId);
+      try {
+        if (c.type==="帳號建立") {
+          if (
+            this.users.some(u =>
+              u.account.toLowerCase()===c.account.toLowerCase()
+            )
+          ) {
+            throw new Error("帳號已存在，無法建立");
+          }
+          this.users.push({
+            id:Date.now()+Math.random(),
+            ...c.payload
+          });
+        } else if (
+          c.type==="帳號維護" ||
+          c.type==="帳號／權限維護"
+        ) {
+          if (!target) throw new Error("找不到原帳號");
+          Object.assign(target,c.payload);
+        } else {
+          if (!target) throw new Error("找不到原帳號");
+          if (c.type==="帳號停用") target.status="停用";
+          if (c.type==="帳號重新啟用") {
+            target.status="啟用";
+          }
+        }
+
+        c.status="已生效";
+        c.steps.push({
+          time:this.now(),
+          actor:"系統",
+          title:"異動生效",
+          detail:c.summary
+        });
+        this.toast("申請已確認並生效；帳號列表已同步更新。");
+      } catch (error) {
+        c.status="生效失敗";
+        c.steps.push({
+          time:this.now(),
+          actor:"系統",
+          title:"生效失敗",
+          detail:error.message
+        });
+        this.toast("確認已記錄，但異動未生效："+error.message);
+      }
+      this.expandedChange=c.id;
+    },
+    confirmReject() {
+      if (
+        !this.isManager ||
+        !this.reviewingChange ||
+        this.reviewingChange.status!=="待確認"
+      ) return;
+      const reason=this.rejectReason.trim();
+      if (!reason || reason.length>200) {
+        this.rejectError="請輸入 1 至 200 字的退回原因。";
+        return;
+      }
+      const c=this.reviewingChange;
+      c.status="已退回";
+      c.reviewNote=reason;
+      c.steps.push({
+        time:this.now(),
+        actor:this.actor.account,
+        title:"退回申請",
+        detail:`${reason}；原帳號資料不變`
+      });
+      this.expandedChange=c.id;
+      this.rejectDialog=false;
+      this.toast("申請已退回；原帳號資料未變更。");
+    },
+    simulateLogin(type) {
+      if (!this.isPlatform) return;
+      const u=this.users.find(x => x.account===this.testAccount);
+      if (!u) {
+        this.toast("請先選擇示範帳號。");
+        return;
+      }
+      if (type==="登入成功" && u.status!=="啟用") {
+        this.toast(
+          `帳號目前為「${u.status}」，不能模擬登入成功。`
+        );
+        return;
+      }
+      if (type==="帳號鎖定" && u.status!=="啟用") {
+        this.toast("請選擇啟用狀態的帳號進行鎖定測試。");
+        return;
+      }
+      if (type==="帳號鎖定" && this.hasPending(u.account)) {
+        this.toast("此帳號有待確認異動，請先完成審核。");
+        return;
+      }
+
+      const time=this.now();
+      this.loginEvents.unshift({
+        id:Date.now()+Math.random(),
+        time,
+        account:u.account,
+        type,
+        detail:type==="登入成功"
+          ? "驗證成功（模擬）"
+          : type==="登入失敗"
+            ? "驗證失敗（模擬）"
+            : "模擬帳號鎖定；鎖定門檻尚待確認",
+        ip:"192.0.2.99"
+      });
+      if (type==="登入成功") u.lastLogin=time;
+      if (type==="帳號鎖定") u.status="鎖定";
+      this.toast(`已新增「${type}」示範紀錄。`);
+    },
+    changePassword() {
+      const p=this.passwordForm;
+      if (!p.old || !p.next || !p.confirm) {
+        this.toast("請完整填寫三個密碼欄位。");
+        return;
+      }
+      if (p.old!=="Demo1234!") {
+        this.toast(
+          "舊密碼不正確；雛型示範舊密碼為 Demo1234!。"
+        );
+        return;
+      }
+      if (
+        p.next.length<8 ||
+        !/[A-Za-z]/.test(p.next) ||
+        !/\d/.test(p.next)
+      ) {
+        this.toast(
+          "新密碼需至少 8 碼，且包含英文字母及數字。"
+        );
+        return;
+      }
+      if (p.next===p.old || p.next!==p.confirm) {
+        this.toast(
+          "新密碼不得與舊密碼相同，且須與確認新密碼一致。"
+        );
+        return;
+      }
+
+      const time=this.now();
+      const id="SELF-"+time.slice(0,10).replaceAll("-","")+
+        "-"+String(this.nextQuickNo++).padStart(3,"0");
+      this.changes.unshift({
+        id,
+        time,
+        type:"自行變更密碼",
+        account:this.actor.account,
+        name:this.actor.name,
+        operator:this.actor.account,
+        targetId:null,
+        payload:null,
+        fileName:"",
+        summary:"變更密碼表單檢核完成；不記錄密碼內容",
+        status:"已完成",
+        reviewNote:"",
+        steps:[
+          {
+            time,
+            actor:this.actor.account,
+            title:"自行變更密碼",
+            detail:"雛型檢核通過；未儲存實際密碼"
+          }
+        ]
+      });
+      this.passwordForm={old:"",next:"",confirm:""};
+      this.toast(
+        "雛型表單檢核通過；已留下不含密碼內容的示範紀錄。"
+      );
+    }
+  }
+}).use(createVuetify({
+  theme:{
+    defaultTheme:"light",
+    themes:{
+      light:{
+        colors:{
+          primary:"#C47700",
+          secondary:"#11144F"
+        }
+      }
+    }
+  }
+})).mount("#app");
+</script>
+</body>
+</html>
